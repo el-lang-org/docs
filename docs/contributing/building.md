@@ -3,7 +3,7 @@
 The source lives in the
 [`el` repository](https://github.com/el-lang-org/el). The authoritative build
 and validation instructions live in
-[`BUILDING.md`](https://github.com/el-lang-org/el/blob/main/BUILDING.md). This
+[`BUILDING.md`](https://github.com/el-lang-org/el/blob/main/docs/BUILDING.md). This
 page summarizes the commands for contributors.
 
 ```sh
@@ -93,8 +93,8 @@ cargo test --release -p el-driver --features gc-stress-test --test native
 cargo build --workspace --locked --offline
 ```
 
-Publication remains blocked until the project-license issue in
-`LICENSE_POLICY.md` is resolved.
+Distributions must include the MIT license notice and the notices required by
+`LICENSE_POLICY.md`.
 
 ## Unicode data regeneration
 

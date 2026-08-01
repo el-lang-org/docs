@@ -77,7 +77,7 @@ export default defineConfig({
       ],
     },
     footer: {
-      message: 'EL — a small, predictable systems programming language',
+      message: 'EL — a small systems programming language built for developer experience',
       copyright: 'Documentation for the EL programming language',
     },
     socialLinks: [],

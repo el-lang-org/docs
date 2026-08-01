@@ -2,7 +2,7 @@
 layout: home
 hero:
   name: "EL"
-  text: "A small, predictable systems language"
+  text: "A small systems language built for developer experience"
   tagline: Statically typed · garbage-collected · native AOT compilation through LLVM
   actions:
     - theme: brand

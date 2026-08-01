@@ -11,10 +11,10 @@ focuses on ensuring that EL is installed and that you can compile your first
 program.
 
 ::: tip Current status
-EL is still being implemented. The grammar, type system, CLI contract, and core
-standard-library APIs are specified and fixed for v1; the compiler backend is
-under active development. Pages in this site are written against those normative
-specifications.
+The v1 implementation and conformance milestones are complete. The only
+supported native target is Darwin arm64 (`aarch64-apple-darwin`). Pages in this
+site are written against the normative specifications in the
+[`el` repository](https://github.com/el-lang-org/el).
 :::
 
 ## At a glance
@@ -78,8 +78,9 @@ multiple LLVM installations exist. `llvm-config --version` must report `22.1.8`.
 A matching technical distribution contains the `el` executable, the LLVM shared
 libraries it needs, the statically linked EL runtime and Boehm GC, generated
 Unicode tables, the normative specifications, license notices, and
-reproducibility metadata. Publication is currently blocked pending a project
-license.
+reproducibility metadata. EL is available under the MIT License; distribution
+requirements are documented in
+[`LICENSE_POLICY.md`](https://github.com/el-lang-org/el/blob/main/docs/LICENSE_POLICY.md).
 
 See [Contributing: Building from Source](/contributing/building) for the full
 validation commands a distribution builder must pass.
