@@ -49,9 +49,12 @@ executable target must all match; cross-compilation is not part of v1.
 
 ### Building from source
 
-Until signed packages exist, build `el` from the exact source revision:
+Until signed packages exist, build `el` from the source at
+<https://github.com/el-lang-org/el>:
 
 ```sh
+git clone https://github.com/el-lang-org/el.git
+cd el
 export LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm
 export PATH="$LLVM_SYS_221_PREFIX/bin:$PATH"
 cargo build --workspace --release
