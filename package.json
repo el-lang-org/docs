@@ -1,0 +1,14 @@
+{
+  "name": "el-lang-docs",
+  "version": "1.0.0",
+  "description": "Documentation for the EL programming language",
+  "private": true,
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}
