@@ -10,7 +10,9 @@ contribution guidance below mirrors the repository's own rules.
 - Before a change, identify the affected compiler stage and current roadmap
   milestone, then read the relevant authoritative document.
 - For an intentional language change, update the authoritative document and
-  record an accepted decision in `DESIGN.md` before implementation or examples
+  record an accepted decision in
+  [`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/DESIGN.md) before
+  implementation or examples
   depend on it.
 - Prefer a narrow end-to-end milestone slice over disconnected scaffolding.
 - Preserve unrelated uncommitted work and avoid drive-by rewrites.
@@ -19,16 +21,17 @@ contribution guidance below mirrors the repository's own rules.
 
 | Subject | Source to read |
 | --- | --- |
-| Lexical rules and concrete syntax | `GRAMMAR.md` |
-| Type formation, static semantics, well-formedness | `TYPES.md` |
-| Compiler representations, lowering boundaries, verifier invariants | `IR.md` |
-| Vision, runtime semantics, architecture, roadmap, decisions | `DESIGN.md` |
-| Toolchain, dependency, build, native prerequisites | `BUILDING.md` |
-| Illustrative programs and examples | `EXAMPLES.md` |
+| Lexical rules and concrete syntax | [`GRAMMAR.md`](https://github.com/el-lang-org/el/blob/main/GRAMMAR.md) |
+| Type formation, static semantics, well-formedness | [`TYPES.md`](https://github.com/el-lang-org/el/blob/main/TYPES.md) |
+| Compiler representations, lowering boundaries, verifier invariants | [`IR.md`](https://github.com/el-lang-org/el/blob/main/IR.md) |
+| Vision, runtime semantics, architecture, roadmap, decisions | [`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/DESIGN.md) |
+| Toolchain, dependency, build, native prerequisites | [`BUILDING.md`](https://github.com/el-lang-org/el/blob/main/BUILDING.md) |
+| Illustrative programs and examples | [`EXAMPLES.md`](https://github.com/el-lang-org/el/blob/main/EXAMPLES.md) |
 
 ## Implementation rules
 
-- Follow `DESIGN.md` milestones in order and complete each stated exit test.
+- Follow [`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/DESIGN.md)
+  milestones in order and complete each stated exit test.
 - Keep compiler stages distinct; never use LLVM IR as the type checker.
 - Preserve byte spans and EL's left-to-right, exactly-once evaluation order.
 - Use stable typed IDs for compiler-local entities — never source spellings,
@@ -47,7 +50,9 @@ contribution guidance below mirrors the repository's own rules.
   useful layer, covering accepted and rejected forms including spans.
 - Prefer semantic assertions and deterministic AST/Typed AST/Core IR snapshots.
 - For backend-sensitive semantics, test development and optimized builds.
-- Before handoff, follow `BUILDING.md` and run the workspace checks plus the
+- Before handoff, follow
+  [`BUILDING.md`](https://github.com/el-lang-org/el/blob/main/BUILDING.md) and run
+  the workspace checks plus the
   applicable milestone exit test.
 
 See [Building from Source](/contributing/building) for the exact commands and

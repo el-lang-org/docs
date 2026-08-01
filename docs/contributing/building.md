@@ -1,7 +1,15 @@
 # Building from Source
 
-The authoritative build and validation instructions live in `BUILDING.md`. This
+The source lives in the
+[`el` repository](https://github.com/el-lang-org/el). The authoritative build
+and validation instructions live in
+[`BUILDING.md`](https://github.com/el-lang-org/el/blob/main/BUILDING.md). This
 page summarizes the commands for contributors.
+
+```sh
+git clone https://github.com/el-lang-org/el.git
+cd el
+```
 
 ## Rust workspace
 

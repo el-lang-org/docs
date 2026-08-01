@@ -1,7 +1,10 @@
 # Compiler Architecture
 
 The compiler is a Rust workspace of small, stage-focused crates. The normative
-architecture lives in `DESIGN.md` (section 11) and `IR.md`; this page summarizes
+architecture lives in
+[`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/DESIGN.md)
+(section 11) and [`IR.md`](https://github.com/el-lang-org/el/blob/main/IR.md);
+this page summarizes
 the stage pipeline and crate layout.
 
 ## Pipeline
@@ -46,4 +49,6 @@ PEG parse tree -> AST -> name resolution + type checking -> Typed AST
 ## Roadmap milestones
 
 Development proceeds through milestones M0–M9, each ending with working tests
-and a runnable example. See `DESIGN.md` section 15 for the current roadmap state.
+and a runnable example. See
+[`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/DESIGN.md)
+section 15 for the current roadmap state.
