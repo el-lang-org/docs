@@ -112,6 +112,44 @@ Match guards, alternative patterns (`p1 | p2`), pinning, and map patterns are
 not part of v1.
 :::
 
+## With expressions
+
+`with` chains refutable operations and returns the first failure unchanged,
+avoiding nested `match` expressions for tagged-result pipelines:
+
+```el
+with {:ok, left} <- parse_left(input),
+     {:ok, right} <- parse_right(input) do
+  {:ok, left + right}
+end
+```
+
+Each clause is `pattern <- expression`. Clauses are evaluated once from left to
+right. A matching clause makes its bindings available to later clauses and the
+body; the body runs only when every clause matches. The first value that does
+not match its clause pattern becomes the result without evaluating the remaining
+clauses or the body. An irrefutable clause is valid and has no propagated
+failure case.
+
+Every possible propagated failure value must fit the `with` result type, either
+exactly or through expected-union injection; without an expected type, the body
+establishes the result type:
+
+```el
+def validate(registration: Registration) -> ValidationResult do
+  with :ok <- validate_username(registration.username),
+       :ok <- validate_email(registration.email),
+       :ok <- validate_age(registration.age) do
+    {:ok, make_user(registration)}
+  end
+end
+```
+
+::: warning Not in v1
+`with` has no `else` form. When failures need transformation, use an exhaustive
+`match` on the propagated value.
+:::
+
 ## The `Option` type
 
 Positional lookup and similar operations return the reserved core prelude type

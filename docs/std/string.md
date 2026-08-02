@@ -29,6 +29,54 @@ Returns the number of Unicode grapheme clusters. It is generally O(n):
 count = String.length("hellö")   # 5
 ```
 
+### String.empty
+
+```el
+String.empty(text: string) -> bool
+```
+
+Returns `true` when the string has no bytes. It is equivalent to
+`String.byte_size(text) == 0`:
+
+```el
+String.empty("")     # true
+String.empty("a")    # false
+```
+
+### String.contains
+
+```el
+String.contains(text: string, pattern: string) -> bool
+```
+
+Performs an exact, case-sensitive substring search over UTF-8 bytes. The empty
+pattern is contained in every string:
+
+```el
+String.contains("café", "fé")   # true
+String.contains("abc", "")      # true
+String.contains("abc", "z")     # false
+```
+
+### String.split
+
+```el
+String.split(text: string, separator: string) -> [string]
+```
+
+Separates from left to right at exact, non-overlapping separator matches. It
+preserves leading, trailing, and adjacent empty fields. An empty separator
+performs no split and returns a one-element list containing the source:
+
+```el
+String.split("a,,b,", ",")   # ["a", "", "b", ""]
+String.split("abc", "/")     # ["abc"]
+String.split("abc", "")      # ["abc"]
+```
+
+Use `String.graphemes` when the desired unit is a Unicode extended grapheme
+cluster rather than a literal separator match.
+
 ### String.bytes
 
 ```el

@@ -40,6 +40,33 @@ end
 Integer indexing such as `text[i]` is invalid — EL strings are not indexable.
 :::
 
+## Predicates and splitting
+
+Basic predicates and a separator operation make common validation and parsing
+intent explicit:
+
+```el
+if String.empty(text) == false and String.contains(text, "@") do
+  fields: [string] = String.split(text, "@")
+end
+```
+
+- `String.empty(text)` is equivalent to `String.byte_size(text) == 0`.
+- `String.contains(text, pattern)` performs an exact, case-sensitive substring
+  search over UTF-8 bytes; the empty pattern is contained in every string.
+- `String.split(text, separator)` separates from left to right at exact,
+  non-overlapping matches and preserves leading, trailing, and adjacent empty
+  fields.
+
+```el
+String.split("a,,b,", ",")    # ["a", "", "b", ""]
+String.split("abc", "/")      # ["abc"]
+String.split("abc", "")       # ["abc"] — empty separator does no split
+```
+
+Use `String.graphemes` when the desired unit is a Unicode extended grapheme
+cluster rather than a literal separator match.
+
 ## Unicode
 
 All grapheme APIs use EL v1's bundled Unicode 17.0.0 data and the untailored

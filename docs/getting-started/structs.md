@@ -20,16 +20,26 @@ user = %User{id: 1, name: "Ada"}
 Structs have value semantics and no observable identity. Copying a struct is a
 shallow fieldwise copy; immutable reference-backed fields may share storage.
 
+An immutable struct update, `%{value | field: replacement}`, returns a new
+struct with the named field replaced and leaves `value` unchanged. Multiple
+fields may be replaced in one expression:
+
+```el
+original = %User{id: 1, name: "Ada"}
+renamed = %{original | name: "Grace"}
+
+# original.name is still "Ada"
+# renamed.name is "Grace"
+
+older = %{original | id: 2, name: "Grace"}
+```
+
 Fields are not independently mutable, but a direct field update may reconstruct
 a struct and rebind a mutable local:
 
 ```el
-original = %User{id: 1, name: "Ada"}
 mut renamed = original
 renamed.name := "Grace"
-
-# original.name is still "Ada"
-# renamed.name is "Grace"
 ```
 
 The root must be a mutable local, the assigned value must have exactly the
