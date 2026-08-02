@@ -92,8 +92,12 @@ Returns an optional target-dependent `i64` error code.
 ## Notes
 
 `IO.print`, `IO.println`, and `IO.report` format through `Show`; this is not a
-general implicit conversion to `string`. Programs needing recoverable behavior
-use the `Reader` and `Writer` protocols with `IO.stdin`, `IO.stdout`, or
-`IO.stderr`. These process-owned handles are not closed by EL programs. Their
-associated error type is `IO.Error`; standard I/O, file, and UTF-8 errors are
-immutable values implementing `Eq`, `Hash`, and `Show`, but not `Ord`.
+general implicit conversion to `string`. Collections use recursive diagnostic
+formatting: tuples as `{a, b}`, lists as `[a, b]`, arrays as `#[a, b]`, slices
+as `Slice[a, b]`, and maps as `%{key => value}` in insertion order. These forms
+are for human-readable diagnostics, not parsing or stable serialization.
+Programs needing recoverable behavior use the `Reader` and `Writer` protocols
+with `IO.stdin`, `IO.stdout`, or `IO.stderr`. These process-owned handles are
+not closed by EL programs. Their associated error type is `IO.Error`; standard
+I/O, file, and UTF-8 errors are immutable values implementing `Eq`, `Hash`, and
+`Show`, but not `Ord`.

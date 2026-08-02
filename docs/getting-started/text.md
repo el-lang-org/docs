@@ -56,12 +56,14 @@ end
   search over UTF-8 bytes; the empty pattern is contained in every string.
 - `String.split(text, separator)` separates from left to right at exact,
   non-overlapping matches and preserves leading, trailing, and adjacent empty
-  fields.
+  fields. The separator defaults to a single ASCII space, so
+  `String.split("one two")` returns `["one", "two"]`.
 
 ```el
 String.split("a,,b,", ",")    # ["a", "", "b", ""]
 String.split("abc", "/")      # ["abc"]
 String.split("abc", "")       # ["abc"] — empty separator does no split
+String.split("one two")       # ["one", "two"] — defaults to " "
 ```
 
 Use `String.graphemes` when the desired unit is a Unicode extended grapheme

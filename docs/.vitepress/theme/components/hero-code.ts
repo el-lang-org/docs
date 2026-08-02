@@ -18,6 +18,7 @@ export const heroCodeSlides: HeroCodeSlide[] = [
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> String</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.split()</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Enum</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.frequencies()</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> IO</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.println()</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#8B949E"># %{"small" =&gt; 1, "language" =&gt; 1, "big" =&gt; 1, "delight" =&gt; 1}</span></span>
 <span class="line"></span></code></pre>`,
   },
 ]

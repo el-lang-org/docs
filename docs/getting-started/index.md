@@ -60,11 +60,13 @@ export PATH="$LLVM_SYS_221_PREFIX/bin:$PATH"
 cargo build --workspace --release
 ```
 
-The binary is produced at `target/release/el`. Verify the toolchain:
+The binaries are produced at `target/release/el` and `target/release/elc`.
+Verify the toolchain:
 
 ```sh
 el --help
 el --version   # prints exactly "el <version>"
+elc --version  # prints exactly "elc <version>"
 ```
 
 ::: tip Finding LLVM
@@ -75,9 +77,9 @@ multiple LLVM installations exist. `llvm-config --version` must report `22.1.8`.
 
 ### Supported distribution contents
 
-A matching technical distribution contains the `el` executable, the LLVM shared
-libraries it needs, the statically linked EL runtime and Boehm GC, generated
-Unicode tables, the normative specifications, license notices, and
+A matching technical distribution contains the `el` and `elc` executables, the
+LLVM shared libraries they need, the statically linked EL runtime and Boehm GC,
+generated Unicode tables, the normative specifications, license notices, and
 reproducibility metadata. EL is available under the MIT License; distribution
 requirements are documented in
 [`LICENSE_POLICY.md`](https://github.com/el-lang-org/el/blob/main/docs/LICENSE_POLICY.md).
@@ -144,6 +146,26 @@ Executables are written beneath the manifest root at
 ```sh
 ./build/aarch64-apple-darwin/debug/hello
 ```
+
+### Compile one source file
+
+Use `elc` when a program does not need a project manifest or dependencies:
+
+```sh
+elc hello.ell
+./hello
+```
+
+The source must declare `Main.main() -> i32`. By default, `elc` writes an
+executable named after the source file in the current directory. Use `-o` (or
+`--output`) to select another path and `--release` to enable optimizations:
+
+```sh
+elc --release -o hello-fast hello.ell
+```
+
+`elc` compiles exactly one `.ell` module and does not discover `el.toml`, load
+dependencies, create a lockfile, or write project build metadata.
 
 ### The module rules
 

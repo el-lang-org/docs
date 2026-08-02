@@ -1,7 +1,7 @@
 # CLI Reference
 
-The executable is named `el`. The following invocations are the **complete
-normative v1 command surface**:
+The project/package executable is named `el`. The following invocations are its
+**complete normative v1 command surface**:
 
 ```text
 el --help
@@ -14,6 +14,20 @@ el build --locked
 el build --release --locked
 el emit llvm-ir --module Main
 ```
+
+The standalone compiler is named `elc` and accepts:
+
+```text
+elc --help
+elc --version
+elc [--release] [-o executable] source.ell
+```
+
+`elc` compiles exactly one source module without manifest discovery,
+dependencies, lockfiles, or project build metadata. The module must provide
+`Main.main() -> i32`. Without `-o`, the executable uses the source stem (plus
+any host executable suffix) and is written in the current directory. `--output`
+is the long spelling of `-o`.
 
 ## Project discovery
 
@@ -55,10 +69,16 @@ language API.
 
 - Diagnostics go to standard error. Successful `check` and `build` need not
   print anything on standard output.
-- `--help` prints usage for every command to standard output; `--version`
-  prints exactly `el <version>` plus one newline.
+- `--help` prints the respective executable's usage to standard output;
+  `--version` prints exactly the executable name, one space, the compiler
+  distribution's semantic version, and one newline.
 - Command names and options are case-sensitive.
-- Options are command-local: v1 has no global project-directory, color,
-  verbosity, target, or output-path flags.
+- Options are executable- and command-local: v1 has no global project-directory,
+  color, verbosity, or target flag, and `el` has no output-path flag (`elc`
+  owns the `-o`/`--output` option).
+- A successful invocation exits with status 0; a reported source, manifest,
+  dependency, lockfile, code-generation, or linker failure exits with status 1;
+  a malformed invocation (unknown command or option, duplicate or missing option
+  value) prints usage to standard error and exits with status 2.
 - There is no `el run` or `el test` in v1 — execute the built native program
   directly and pass process arguments to it.

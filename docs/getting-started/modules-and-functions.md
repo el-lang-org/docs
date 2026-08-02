@@ -48,16 +48,23 @@ function values — define an ordinary named wrapper when needed.
 ## Newlines and pipelines
 
 EL has no semicolons. A newline separates complete constructs; a line continues
-when the expression is visibly incomplete:
+when the expression is visibly incomplete: inside open delimiters, after a
+comma, after a non-pipeline operator that still needs its right operand, or
+before a pipeline operator that begins the next line.
 
 ```el
 total = subtotal +
   tax
 
-result = input |>
-  normalize() |>
-  validate()
+result = input
+  |> normalize()
+  |> validate()
 ```
+
+The pipeline operator is the only operator that may continue a complete
+expression from the preceding line. In a multiline pipeline, each `|>` must be
+at the beginning of its continued line (after optional indentation), and its
+right operand must begin on that same line.
 
 The pipeline operator `|>` inserts its left side as the first argument of the
 call on its right:

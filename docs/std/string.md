@@ -61,17 +61,20 @@ String.contains("abc", "z")     # false
 ### String.split
 
 ```el
-String.split(text: string, separator: string) -> [string]
+String.split(text: string, separator: string = " ") -> [string]
 ```
 
 Separates from left to right at exact, non-overlapping separator matches. It
-preserves leading, trailing, and adjacent empty fields. An empty separator
-performs no split and returns a one-element list containing the source:
+preserves leading, trailing, and adjacent empty fields. The separator defaults
+to a single ASCII space, so `String.split("one two")` returns `["one", "two"]`.
+An empty separator performs no split and returns a one-element list containing
+the source:
 
 ```el
 String.split("a,,b,", ",")   # ["a", "", "b", ""]
 String.split("abc", "/")     # ["abc"]
 String.split("abc", "")      # ["abc"]
+String.split("one two")      # ["one", "two"]
 ```
 
 Use `String.graphemes` when the desired unit is a Unicode extended grapheme

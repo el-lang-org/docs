@@ -93,5 +93,7 @@ scores = %{"Ada" => 1, "Grace" => 2, "Ada" => 3}
 ```
 
 Map equality compares key/value membership and ignores insertion order, while
-`Show` and `Iterable` observe insertion order. The runtime's seeded hash
-strategy never changes this order.
+`Show` and `Iterable` observe insertion order. `Show` renders a map as
+`%{key => value}` with entries separated by `, ` in insertion order, when the
+key and value types both implement `Show`. The runtime's seeded hash strategy
+never changes this order.

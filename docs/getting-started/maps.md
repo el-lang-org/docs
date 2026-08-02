@@ -28,8 +28,9 @@ scores = Map.put(scores, "Ada", 44)   # "Ada" is now last
 ```
 
 Map equality compares key/value membership and ignores insertion order, while
-`Show` and `Iterable` observe insertion order. The runtime's seeded hash
-strategy never changes this order.
+`Show` and `Iterable` observe insertion order. `Show` renders a map as
+`%{key => value}` with entries separated by `, ` in insertion order. The
+runtime's seeded hash strategy never changes this order.
 
 For the complete list of `Map` functions with signatures and examples, see the
 [`Map` reference](/std/map).

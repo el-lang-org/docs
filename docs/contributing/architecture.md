@@ -31,7 +31,7 @@ PEG parse tree -> AST -> name resolution + type checking -> Typed AST
 | `el-codegen` | monomorphization and LLVM lowering (Inkwell, `llvm` feature) |
 | `el-runtime` | private allocation ABI, Boehm GC, Unicode tables |
 | `el-driver` | packages, manifests, lockfiles, build orchestration, native tests |
-| `el-cli` | the `el` command-line surface |
+| `el-cli` | the `el` project and `elc` single-file command-line surfaces |
 | `el-span` | source spans |
 
 ## Invariants
