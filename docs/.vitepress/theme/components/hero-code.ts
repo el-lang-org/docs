@@ -12,7 +12,7 @@ export const heroCodeMaxLines = () =>
 export const heroCodeSlides: HeroCodeSlide[] = [
   {
     title: 'main.ell',
-    html: `<pre class="shiki shiki-themes github-light github-dark vp-code" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">"Fun to learn, delightful to ship"</span></span>
+    html: `<pre class="shiki shiki-themes github-light github-dark vp-code" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">"Small language, big delight"</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> String</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.downcase()</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> String</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.replace(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">","</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#032F62;--shiki-dark:#9ECBFF">""</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> String</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.split()</span></span>
