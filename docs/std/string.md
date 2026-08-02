@@ -43,6 +43,21 @@ String.empty("")     # true
 String.empty("a")    # false
 ```
 
+### String.downcase
+
+```el
+String.downcase(text: string) -> string
+```
+
+Returns the text with each Unicode scalar value mapped by the pinned Unicode
+lowercase mapping. It is independent of the host locale and performs no case
+folding or normalization:
+
+```el
+String.downcase("CAFÉ")     # "café"
+String.downcase("Hello")    # "hello"
+```
+
 ### String.contains
 
 ```el
@@ -75,6 +90,21 @@ String.split("a,,b,", ",")   # ["a", "", "b", ""]
 String.split("abc", "/")     # ["abc"]
 String.split("abc", "")      # ["abc"]
 String.split("one two")      # ["one", "two"]
+```
+
+### String.replace
+
+```el
+String.replace(text: string, pattern: string, replacement: string) -> string
+```
+
+Consumes exact, non-overlapping UTF-8 matches from left to right, replacing each
+with `replacement`. An empty pattern is a no-op and leaves the source unchanged:
+
+```el
+String.replace("a,b,c", ",", "-")   # "a-b-c"
+String.replace("aaa", "aa", "b")    # "ba" — non-overlapping, left to right
+String.replace("abc", "", "-")      # "abc"
 ```
 
 Use `String.graphemes` when the desired unit is a Unicode extended grapheme
@@ -183,4 +213,6 @@ offset = String.utf8_error_offset(reason)
 `String.Utf8Error` is an opaque immutable value implementing `Show`, `Eq`, and
 `Hash`, but not `Ord`; equality and hashing use only the offset. EL performs no
 implicit normalization, case folding, or locale tailoring before segmentation.
-The default UAX #29 rules operate directly on the source scalar sequence.
+`downcase` and `replace` match on exact UTF-8 bytes; they are independent of the
+host locale. The default UAX #29 rules operate directly on the source scalar
+sequence.

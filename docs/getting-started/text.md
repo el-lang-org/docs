@@ -42,8 +42,8 @@ Integer indexing such as `text[i]` is invalid — EL strings are not indexable.
 
 ## Predicates and splitting
 
-Basic predicates and a separator operation make common validation and parsing
-intent explicit:
+Basic predicates, transformation, and separator operations make common
+validation and parsing intent explicit:
 
 ```el
 if String.empty(text) == false and String.contains(text, "@") do
@@ -54,6 +54,11 @@ end
 - `String.empty(text)` is equivalent to `String.byte_size(text) == 0`.
 - `String.contains(text, pattern)` performs an exact, case-sensitive substring
   search over UTF-8 bytes; the empty pattern is contained in every string.
+- `String.downcase(text)` applies the pinned Unicode lowercase mapping and is
+  independent of the host locale.
+- `String.replace(text, pattern, replacement)` consumes exact, non-overlapping
+  UTF-8 matches from left to right; an empty pattern leaves the source
+  unchanged.
 - `String.split(text, separator)` separates from left to right at exact,
   non-overlapping matches and preserves leading, trailing, and adjacent empty
   fields. The separator defaults to a single ASCII space, so
@@ -64,6 +69,8 @@ String.split("a,,b,", ",")    # ["a", "", "b", ""]
 String.split("abc", "/")      # ["abc"]
 String.split("abc", "")       # ["abc"] — empty separator does no split
 String.split("one two")       # ["one", "two"] — defaults to " "
+String.downcase("CAFÉ")       # "café"
+String.replace("a,b,c", ",", "-")   # "a-b-c"
 ```
 
 Use `String.graphemes` when the desired unit is a Unicode extended grapheme

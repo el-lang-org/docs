@@ -20,6 +20,21 @@ count = Enum.count([10, 20, 30])   # 3
 total_words = Enum.count(words)
 ```
 
+### Enum.frequencies
+
+```el
+Enum.frequencies(values: i) -> Map(item, usize)
+```
+
+Traverses once in iterable order and returns a map with one entry per distinct
+item, counting duplicate occurrences as `usize` values. The item type must
+satisfy `Eq` and `Hash`:
+
+```el
+counts: Map(string, usize) = Enum.frequencies(["a", "b", "a"])
+# %{"a" => 2, "b" => 1}
+```
+
 ### Enum.at
 
 ```el

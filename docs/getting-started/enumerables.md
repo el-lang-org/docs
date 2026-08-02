@@ -29,6 +29,14 @@ has_positive = Enum.any([-2, -1, 3], is_positive)   # true
 all_positive = Enum.all([1, 2, 3], is_positive)   # true
 ```
 
+`Enum.frequencies` counts occurrences of each item into a `Map(item, usize)` in
+traversal order; the item type must satisfy `Eq` and `Hash`:
+
+```el
+counts: Map(string, usize) = Enum.frequencies(["a", "b", "a"])
+# %{"a" => 2, "b" => 1}
+```
+
 Traversal follows each iterable's deterministic order. On maps the item type is
 always `{key, value}` and order is insertion order; `bytes` iterate by
 increasing byte offset; string views iterate in source order.
