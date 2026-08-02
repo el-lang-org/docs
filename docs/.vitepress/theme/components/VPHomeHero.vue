@@ -50,19 +50,21 @@ function next() {
             <span class="hero-code-dot"></span>
             <span class="hero-code-dot"></span>
             <span class="hero-code-title">{{ heroCodeSlides[current].title }}</span>
-            <span class="hero-code-counter">
-              {{ current + 1 }}/{{ heroCodeSlides.length }}
-            </span>
-            <button class="hero-code-nav" type="button" aria-label="Previous snippet" @click="prev">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                <path d="M6.5 1 3 5l3.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </button>
-            <button class="hero-code-nav" type="button" aria-label="Next snippet" @click="next">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                <path d="m3.5 1 3.5 4-3.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </button>
+            <template v-if="heroCodeSlides.length > 1">
+              <span class="hero-code-counter">
+                {{ current + 1 }}/{{ heroCodeSlides.length }}
+              </span>
+              <button class="hero-code-nav" type="button" aria-label="Previous snippet" @click="prev">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <path d="M6.5 1 3 5l3.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button class="hero-code-nav" type="button" aria-label="Next snippet" @click="next">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <path d="m3.5 1 3.5 4-3.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </template>
           </div>
           <div
             class="hero-code-body"
