@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 import { elLanguage } from './el-grammar'
 
 export default defineConfig({
-  title: 'EL',
+  title: 'EL — A Small Systems Programming Language',
   description: 'A small, statically typed, garbage-collected systems programming language',
   lang: 'en-US',
   cleanUrls: true,
