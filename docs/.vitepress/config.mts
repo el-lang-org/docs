@@ -13,6 +13,10 @@ export default defineConfig({
     languages: [elLanguage],
   },
   themeConfig: {
+    outline: {
+      level: [2, 3],
+      label: 'On this page',
+    },
     logo: '/logo.svg',
     nav: [
       { text: 'Home', link: '/' },
