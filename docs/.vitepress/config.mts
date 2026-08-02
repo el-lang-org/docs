@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitepress'
 import { elLanguage } from './el-grammar'
 
@@ -11,6 +12,18 @@ export default defineConfig({
   ],
   markdown: {
     languages: [elLanguage],
+  },
+  vite: {
+    resolve: {
+      alias: [
+        {
+          find: /^.*\/VPHomeHero\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./theme/components/VPHomeHero.vue', import.meta.url),
+          ),
+        },
+      ],
+    },
   },
   themeConfig: {
     outline: {
