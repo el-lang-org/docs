@@ -35,7 +35,7 @@ header: bits = Bits.slice(all, 0, 12)
 ### Bits.to_bytes
 
 ```el
-Bits.to_bytes(value: bits) -> Option(bytes)
+Bits.to_bytes(value: bits) -> Option[bytes]
 ```
 
 Returns the byte-aligned representation. Returns `:none` when the bit length is
@@ -43,8 +43,8 @@ not divisible by eight:
 
 ```el
 match Bits.to_bytes(header) do
-  {:some, data} -> consume(data)
-  :none -> IO.report("not byte-aligned")
+	{:some, data} -> consume(data)
+	:none -> IO.report("not byte-aligned")
 end
 ```
 

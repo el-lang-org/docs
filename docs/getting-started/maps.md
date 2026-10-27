@@ -12,8 +12,8 @@ nullable value:
 
 ```el
 match Map.fetch(scores, "Ada") do
-  {:some, score} -> IO.println(score)
-  :none -> IO.println("missing")
+	{:some, score} -> IO.println(score)
+	:none -> IO.println("missing")
 end
 ```
 

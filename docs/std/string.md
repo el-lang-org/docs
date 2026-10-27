@@ -159,7 +159,7 @@ traversal:
 
 ```el
 for codepoint in String.codepoint_view(text) do
-  inspect_codepoint(codepoint)
+	inspect_codepoint(codepoint)
 end
 ```
 
@@ -173,7 +173,7 @@ Lazily iterates grapheme-cluster string slices:
 
 ```el
 for grapheme in String.grapheme_view(text) do
-  inspect_grapheme(grapheme)
+	inspect_grapheme(grapheme)
 end
 ```
 
@@ -181,17 +181,17 @@ end
 
 ```el
 String.from_bytes(data: bytes) ->
-  {:ok, string} | {:error, String.Utf8Error}
+	{:ok, string} | {:error, String.Utf8Error}
 ```
 
 Validates the byte sequence as UTF-8:
 
 ```el
 match String.from_bytes(data) do
-  {:ok, text} -> IO.println(text)
-  {:error, reason} ->
-    offset = String.utf8_error_offset(reason)
-    IO.report("invalid UTF-8 at byte " ++ Show.show(offset))
+	{:ok, text} -> IO.println(text)
+	{:error, reason} ->
+		offset = String.utf8_error_offset(reason)
+		IO.report("invalid UTF-8 at byte " ++ Show.show(offset))
 end
 ```
 
@@ -213,6 +213,6 @@ offset = String.utf8_error_offset(reason)
 `String.Utf8Error` is an opaque immutable value implementing `Show`, `Eq`, and
 `Hash`, but not `Ord`; equality and hashing use only the offset. EL performs no
 implicit normalization, case folding, or locale tailoring before segmentation.
-`downcase` and `replace` match on exact UTF-8 bytes; they are independent of the
-host locale. The default UAX #29 rules operate directly on the source scalar
+`downcase` uses the pinned Unicode scalar mappings. `replace` matches exact
+UTF-8 bytes. Both are independent of the host locale. The default UAX #29 rules operate directly on the source scalar
 sequence.

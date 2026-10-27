@@ -1,6 +1,6 @@
 # List
 
-Linked lists are immutable and homogeneous. Their type is `[a]`:
+Linked lists are immutable and homogeneous. Their type is `[A]`:
 
 ```el
 numbers: [i64] = [1, 2, 3]
@@ -12,7 +12,7 @@ words: [string] = ["one", "two", "three"]
 ### List.reverse
 
 ```el
-List.reverse(values: [a]) -> [a]
+List.reverse[A](values: [A]) -> [A]
 ```
 
 Returns the elements in reverse order. It is O(n) and allocates a fresh logical

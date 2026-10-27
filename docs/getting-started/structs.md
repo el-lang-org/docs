@@ -2,14 +2,14 @@
 
 ## Declaration and construction
 
-`defstruct` declares a nominal type with immutable fields. Every field must be
+`struct` declares a nominal type with immutable fields. Every field must be
 initialized:
 
 ```el
 @derive [Eq, Show, Hash]
-defstruct User do
-  id: u64
-  name: string
+struct User do
+	id: u64
+	name: string
 end
 
 user = %User{id: 1, name: "Ada"}
@@ -43,41 +43,41 @@ renamed.name := "Grace"
 ```
 
 The root must be a mutable local, the assigned value must have exactly the
-field's type, and the update evaluates to `unit`. V1 does not accept nested
-field paths, indexed targets, parameters, temporaries, or call results as update
-targets:
+field's type, and the update evaluates to `unit`. Nested field paths rebuild
+each enclosing struct and rebind the mutable root. Parameters, temporaries,
+and call results are not update targets:
 
 ```el
 # Rejected: updating a field through an immutable root
 point = %Point{x: 1, y: 2}
 point.x := 2
 
-# Rejected: nested field and indexed updates
 mut user = initial_user
 user.address.city := "Paris"
 
-mut items = initial_items
-items[0] := replacement
+# Fixed arrays also support indexed updates through a mutable local.
+mut items = #[1, 2, 3]
+items[0] := 9
 ```
 
 ## Generic structs
 
 ```el
-defstruct Box(a) do
-  value: a
+struct Box[A] do
+	value: A
 end
 
-defstruct Pair(a, b) do
-  first: a
-  second: b
+struct Pair[A, B] do
+	first: A
+	second: B
 end
 ```
 
-Type application uses parentheses:
+Type application uses square brackets:
 
 ```el
-boxed: Box(i64) = %Box{value: 42}
-pair: Pair(string, i64) = %Pair{first: "age", second: 37}
+boxed: Box[i64] = %Box{value: 42}
+pair: Pair[string, i64] = %Pair{first: "age", second: 37}
 ```
 
 ## Recursive data
@@ -86,9 +86,9 @@ Recursive nominal data must cross **managed indirection**. A list-backed tree
 node is valid:
 
 ```el
-defstruct Node do
-  value: i64
-  children: [Node]
+struct Node do
+	value: i64
+	children: [Node]
 end
 ```
 
@@ -97,16 +97,16 @@ struct does not break a recursive layout cycle:
 
 ```el
 # Rejected: direct recursion without managed indirection
-defstruct InvalidNode do
-  next: InvalidNode
+struct InvalidNode do
+	next: InvalidNode
 end
 ```
 
 ## Deriving
 
-`@derive` placed immediately before a `defstruct` declaration asks the compiler
-to generate protocol implementations (compiler-generated `defimpl` blocks), so
-no manual `defimpl` is needed. Each protocol is implemented field by field:
+`@derive` placed immediately before a `struct` declaration asks the compiler
+to generate protocol implementations (compiler-generated `impl` blocks), so
+no manual `impl` is needed. Each protocol is implemented field by field:
 
 - `Eq` — structural equality backing `==` and `!=`: two structs are equal when
   every field is equal.
@@ -121,9 +121,9 @@ no manual `defimpl` is needed. Each protocol is implemented field by field:
 
 ```el
 @derive [Eq, Show, Hash]
-defstruct User do
-  id: u64
-  name: string
+struct User do
+	id: u64
+	name: string
 end
 
 first = %User{id: 1, name: "Ada"}
@@ -139,9 +139,9 @@ Ordering is decided by the earliest differing field:
 
 ```el
 @derive [Ord]
-defstruct Point do
-  x: i64
-  y: i64
+struct Point do
+	x: i64
+	y: i64
 end
 
 %Point{x: 1, y: 2} < %Point{x: 1, y: 3}   # true; y breaks the tie
@@ -153,57 +153,58 @@ protocol; otherwise the declaration is rejected at compile time. Deriving `Eq`
 for `User` above requires `Eq` for both `u64` and `string`. Because `f32` and
 `f64` implement none of `Eq`, `Ord`, or `Hash` (IEEE NaN violates the protocol
 laws), a floating-point field prevents deriving those protocols for its struct.
-`Show` is unaffected:
+`f32` and `f64` also lack `Show`; use `Format.float` for text:
 
 ```el
-@derive [Show]   # accepted: floats still implement Show
-defstruct Measurement do
-  value: f64
+# Rejected: f64 does not implement Show
+@derive [Show]
+struct Measurement do
+	value: f64
 end
 
 # Rejected: f64 implements neither Eq nor Hash
 @derive [Eq, Hash]
-defstruct BadMeasurement do
-  value: f64
+struct BadMeasurement do
+	value: f64
 end
 ```
 
 A field whose type does not implement a protocol blocks derivation for it — for
-example, `Map(k, v)` implements `Eq` and `Show` but neither `Ord` nor `Hash`, so
+example, `Map[K, V]` implements `Eq` and `Show` but neither `Ord` nor `Hash`, so
 a struct with a map field can derive only the former two. Only a subset of
 protocols may be requested, such as `@derive [Show]`.
 
-For generic structs, the generated implementation carries a `when` constraint on
+For generic structs, the generated implementation constrains
 the struct's type parameters, so it exists exactly where the field constraints
 hold:
 
 ```el
 @derive [Eq, Show]
-defstruct Box(a) do
-  value: a
+struct Box[A] do
+	value: A
 end
 
 # The compiler generates:
-#   defimpl Eq,   for: Box(a) when a: Eq
-#   defimpl Show, for: Box(a) when a: Show
+#   impl Eq for Box[A: Eq]
+#   impl Show for Box[A: Show]
 
-boxed: Box(i64) = %Box{value: 42}   # ok: i64 implements Eq and Show
+boxed: Box[i64] = %Box{value: 42}   # ok: i64 implements Eq and Show
 ```
 
-`@derive` and an explicit `defimpl` for the same protocol and struct conflict
+`@derive` and an explicit `impl` for the same protocol and struct conflict
 and are a compile-time error:
 
 ```el
 # Rejected: the derived and explicit Show implementations conflict
 @derive [Eq, Show]
-defstruct Point do
-  x: i64
-  y: i64
+struct Point do
+	x: i64
+	y: i64
 end
 
-defimpl Show, for: Point do
-  def show(value: Point) -> string do
-    "Point(" ++ Show.show(value.x) ++ ", " ++ Show.show(value.y) ++ ")"
-  end
+impl Show for Point do
+	fn show(value: Point) -> string do
+		"Point(" ++ Show.show(value.x) ++ ", " ++ Show.show(value.y) ++ ")"
+	end
 end
 ```

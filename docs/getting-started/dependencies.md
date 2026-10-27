@@ -37,7 +37,6 @@ main = "Main"
 ## Not in v1
 
 - Registries and version ranges.
-- Native FFI dependencies.
 - Multiple versions of one package in the same dependency graph.
 
 ## Lockfile
@@ -49,3 +48,21 @@ main = "Main"
 el check --locked
 el build --locked
 ```
+
+## Native dependencies
+
+Packages can declare C bindings with a `[native]` manifest table. Libraries and
+frameworks use linker names, and the root package grants consent for every
+foreign-declaring dependency through `allow`:
+
+```toml
+[native]
+libraries = ["z"]
+frameworks = []
+allow = ["native_helper"]
+```
+
+The package itself needs `[native]` to declare `@extern` or directly use public
+`Ffi` operations. Root consent also covers transitive dependencies; a
+dependency-local allowlist cannot grant it. Missing lists are empty.
+See [Native FFI](/std/ffi) for boundary types, memory ownership, and restrictions.

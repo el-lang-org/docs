@@ -1,98 +1,72 @@
 # Introduction
 
 EL is a small, statically typed, garbage-collected systems programming
-language. It combines Elixir-inspired syntax with a small, static type system,
-compiles ahead of time to native executables through LLVM, and is bootstrapped
-in Rust.
+language. It uses Elixir-inspired syntax and compiles ahead of time to native
+executables through LLVM. The bootstrap compiler is written in Rust.
 
-This guide teaches the EL fundamentals: the language syntax, how to define
-modules, the common data structures in the language, and more. This chapter
-focuses on ensuring that EL is installed and that you can compile your first
-program.
+The v1 implementation and conformance milestones are complete. The current
+compiler also supports closures, collection libraries, networking, and package
+FFI. The supported native target is Darwin arm64 (`aarch64-apple-darwin`).
+The [language specifications](https://github.com/el-lang-org/el/tree/main/docs)
+define the behavior described on this site.
 
-::: tip Current status
-The v1 implementation and conformance milestones are complete. The only
-supported native target is Darwin arm64 (`aarch64-apple-darwin`). Pages in this
-site are written against the normative specifications in the
-[`el` repository](https://github.com/el-lang-org/el).
-:::
+## Install the compiler
 
-## At a glance
-
-```el
-defmodule Main do
-  def main() -> i32 do
-    IO.println("Hello, world!")
-    0
-  end
-end
-```
-
-> Unless a snippet contains `defmodule`, assume it appears in the body of an
-> appropriate module or function.
-
-## Installation
-
-EL v1 claims a single supported compilation target: **`aarch64-apple-darwin`
-(Darwin arm64)**. The compiler host, LLVM target, system linker, runtime, and
-executable target must all match; cross-compilation is not part of v1.
-
-### Prerequisites
-
-- **Rust 1.97.1** (pinned by `rust-toolchain.toml`), including `rustfmt` and
-  Clippy.
-- **LLVM 22.1.8** with Inkwell 0.9.0, in a shared-library build.
-- **Boehm GC 8.2.12**, vendored and statically linked into the runtime.
-- **Xcode Command Line Tools** providing Apple Clang, the system linker, `ar`,
-  `make`, and `tar`.
-- **Unicode 17.0.0** data, bundled with the distribution.
-
-### Building from source
-
-Until signed packages exist, build `el` from the source at
-<https://github.com/el-lang-org/el>:
+Native builds require Rust 1.97.1, LLVM 22.1.8 with shared libraries, and Xcode
+Command Line Tools. Boehm GC 8.2.12 and Unicode 17.0.0 data are vendored in the
+compiler repository.
 
 ```sh
 git clone https://github.com/el-lang-org/el.git
 cd el
-export LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm
-export PATH="$LLVM_SYS_221_PREFIX/bin:$PATH"
-cargo build --workspace --release
+make build-install INSTALL_DIR="$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+el --version
+elc --version
 ```
 
-The binaries are produced at `target/release/el` and `target/release/elc`.
-Verify the toolchain:
+The Makefile defaults `LLVM_SYS_221_PREFIX` to `/opt/homebrew/opt/llvm`.
+To use another installation, pass `LLVM_SYS_221_PREFIX="/path/to/llvm"`.
+`bin/llvm-config --version` under that prefix must report `22.1.8`.
+
+`make build` compiles the release binaries with the native backend and managed
+runtime. `make install INSTALL_DIR="/path/to/bin"` installs existing binaries.
+See [Building from source](/contributing/building) for Cargo commands and
+validation requirements.
+
+## Compile a first program
+
+Save this as `hello.ell`:
+
+```el
+module Main
+
+fn main() do
+	IO.println("Hello, world!")
+end
+```
+
+Compile and run it:
 
 ```sh
-el --help
-el --version   # prints exactly "el <version>"
-elc --version  # prints exactly "elc <version>"
+elc hello.ell
+./hello
 ```
 
-::: tip Finding LLVM
-`LLVM_SYS_221_PREFIX` must point at the installation prefix containing
-`bin/llvm-config`, and that `bin` directory should be first on `PATH` when
-multiple LLVM installations exist. `llvm-config --version` must report `22.1.8`.
-:::
+The program prints `Hello, world!` and exits with status 0. An omitted return
+type means `unit`. A public, nongeneric `Main.main()` may instead return `i32`
+to choose the process exit code.
 
-### Supported distribution contents
+`elc` compiles one source file without discovering a manifest or dependencies.
+Use `elc --release -o hello-fast hello.ell` for an optimized executable at a
+chosen path.
 
-A matching technical distribution contains the `el` and `elc` executables, the
-LLVM shared libraries they need, the statically linked EL runtime and Boehm GC,
-generated Unicode tables, the normative specifications, license notices, and
-reproducibility metadata. EL is available under the MIT License; distribution
-requirements are documented in
-[`LICENSE_POLICY.md`](https://github.com/el-lang-org/el/blob/main/docs/LICENSE_POLICY.md).
+Unless an example contains a `module` header, place its declarations in a
+module and its executable statements inside a function.
 
-See [Contributing: Building from Source](/contributing/building) for the full
-validation commands a distribution builder must pass.
+## Create a project
 
-## Quickstart
-
-EL projects are described by an `el.toml` manifest with source files under
-`src/`. Source files use the `.ell` extension and are UTF-8.
-
-### Create a project
+Projects use an `el.toml` manifest and UTF-8 `.ell` source files under `src/`:
 
 ```text
 hello/
@@ -101,7 +75,7 @@ hello/
     main.ell
 ```
 
-`el.toml`:
+Create `el.toml`:
 
 ```toml
 [package]
@@ -115,72 +89,42 @@ version = "0.1.0"
 main = "Main"
 ```
 
-`src/main.ell`:
-
-```el
-defmodule Main do
-  def main() -> i32 do
-    IO.println("Hello, world!")
-    0
-  end
-end
-```
-
-The path `src/main.ell` requires the package-relative declaration
-`defmodule Main`. With the manifest namespace, the fully qualified module name
-is `Hello.Main`. `Main.main() -> i32` is the executable entry point; its result
-is forwarded as the process exit code.
-
-### Build and run
+Copy the first program into `src/main.ell`, then check and run it:
 
 ```sh
-el check              # resolve dependencies and type-check the package
-el build              # emit a native executable in the debug profile
-el build --release    # optimized build, same language semantics
+el check
+el run
+el run --release
 ```
 
-Executables are written beneath the manifest root at
-`build/<target-triple>/debug/` and `build/<target-triple>/release/`, named
-`package.name`. V1 has no `el run`; execute the built native program directly:
+Both runs print `Hello, world!`. `el r` is an alias for `el run`. Pass program
+arguments after `--`, for example `el run -- one two`.
 
-```sh
-./build/aarch64-apple-darwin/debug/hello
-```
+`el build` builds without launching. Executables are named after `package.name`
+and written beneath the manifest root at
+`build/<target-triple>/<debug-or-release>/`.
 
-### Compile one source file
+## Module rules
 
-Use `elc` when a program does not need a project manifest or dependencies:
+Each file has one `module Name` header with no enclosing `do` or final `end`.
+The path relative to `src/` determines its package-relative name. For example,
+`src/http/client.ell` declares `module Http.Client`.
 
-```sh
-elc hello.ell
-./hello
-```
+Path components use lowercase `snake_case` and convert to `PascalCase`.
+With namespace `Hello`, `src/main.ell` defines `Hello.Main`. Modules cannot span
+files or nest declarations. Omitting `[target]` makes a package library-only;
+its modules remain importable by dependencies.
 
-The source must declare `Main.main() -> i32`. By default, `elc` writes an
-executable named after the source file in the current directory. Use `-o` (or
-`--output`) to select another path and `--release` to enable optimizations:
+EL compiles for the compiler host. Cross-compilation and Linux native support
+remain deferred.
 
-```sh
-elc --release -o hello-fast hello.ell
-```
+## Tools and examples
 
-`elc` compiles exactly one `.ell` module and does not discover `el.toml`, load
-dependencies, create a lockfile, or write project build metadata.
+The [CLI reference](/getting-started/cli) covers `el test`, `el fmt`, and `el lsp`.
+The [modules and functions guide](/getting-started/modules-and-functions) covers
+closures, explicit generics, and pipelines.
 
-### The module rules
-
-- Each source file contains exactly **one** module, derived from its path
-  relative to `src/`.
-- Path components are lowercase `snake_case` and convert mechanically to
-  `PascalCase`. So `src/http/client.ell` declares `defmodule Http.Client`.
-- Every package is importable from source without a library target. `[target]`
-  is optional and singular; omitting it makes the package library-only.
-- V1 has a single executable target, no cross-compilation, and no integrated
-  `el test`.
-
-### Exit codes
-
-- `0` — successful command.
-- `1` — reported source, manifest, dependency, lockfile, codegen, or linker
-  failure.
-- `2` — malformed invocation (unknown command, duplicate/missing option, etc.).
+Runnable projects in the compiler repository include
+[math and custom operators](https://github.com/el-lang-org/el/tree/main/examples/math_operators),
+[local TCP and HTTP clients and servers](https://github.com/el-lang-org/el/tree/main/examples/net_http),
+and [native FFI](https://github.com/el-lang-org/el/tree/main/examples/native_ffi).

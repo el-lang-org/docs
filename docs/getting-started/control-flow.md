@@ -8,17 +8,17 @@ expected structural union type accepts both branches:
 
 ```el
 label = if score >= 50 do
-  "pass"
+	"pass"
 else
-  "fail"
+	"fail"
 end
 ```
 
 ```el
 value: i64 | string = if use_number do
-  1
+	1
 else
-  "one"
+	"one"
 end
 ```
 
@@ -26,7 +26,7 @@ An effect-only conditional may omit `else`; its type is then `unit`:
 
 ```el
 if verbose do
-  IO.println("starting")
+	IO.println("starting")
 end
 ```
 
@@ -40,8 +40,8 @@ used as conditions.
 ```el
 mut i: i64 = 0
 while i < 10 do
-  IO.println(i)
-  i := i + 1
+	IO.println(i)
+	i := i + 1
 end
 ```
 
@@ -52,11 +52,11 @@ pattern:
 
 ```el
 for item in items do
-  IO.println(item)
+	IO.println(item)
 end
 
 for {name, score} in results do
-  IO.println(name ++ ": " ++ Show.show(score))
+	IO.println(name ++ ": " ++ Show.show(score))
 end
 ```
 
@@ -65,9 +65,26 @@ select only one member of a union. Use an exhaustive `match` inside the loop whe
 item processing is refutable.
 
 ::: warning Not in v1
-C-style loops, `break`, `continue`, comprehensions, and a separate infinite
-`loop` form are not part of v1. Loops evaluate to `unit`.
+C-style loops, comprehensions, and a separate infinite `loop` form are
+unsupported. Loops evaluate to `unit`.
 :::
+
+## Break and continue
+
+`break` exits the innermost loop. `continue` starts its next iteration. Neither
+takes a value, and neither can cross a function boundary. Deferred actions in
+exited scopes run before control leaves those scopes.
+
+```el
+mut count: i64 = 0
+while true do
+	count := count + 1
+	if count == 2 do continue end
+	if count == 4 do break end
+	IO.println(count)
+end
+# Prints 1, then 3.
+```
 
 ## Early return
 
@@ -75,12 +92,12 @@ The normal result of a function is its final expression. Use `return expression`
 only to exit early:
 
 ```el
-def require_positive(value: i64) -> {:ok, i64} | {:error, :not_positive} do
-  if value <= 0 do
-    return {:error, :not_positive}
-  end
+fn require_positive(value: i64) -> {:ok, i64} | {:error, :not_positive} do
+	if value <= 0 do
+		return {:error, :not_positive}
+	end
 
-  {:ok, value}
+	{:ok, value}
 end
 ```
 

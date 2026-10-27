@@ -1,4 +1,4 @@
-# Compiler Architecture
+# Compiler architecture
 
 The compiler is a Rust workspace of small, stage-focused crates. The normative
 architecture lives in
@@ -29,9 +29,11 @@ PEG parse tree -> AST -> name resolution + type checking -> Typed AST
 | `el-types` | type checking, inference, unions, exhaustiveness |
 | `el-ir` | typed AST and Generic/Concrete Core IR contracts, lowering, verification |
 | `el-codegen` | monomorphization and LLVM lowering (Inkwell, `llvm` feature) |
-| `el-runtime` | private allocation ABI, Boehm GC, Unicode tables |
+| `el-runtime` | private allocation ABI, Boehm GC, Unicode tables, TLS, and native helpers |
 | `el-driver` | packages, manifests, lockfiles, build orchestration, native tests |
-| `el-cli` | the `el` project and `elc` single-file command-line surfaces |
+| `el-cli` | `el` package commands and the `elc` single-file compiler |
+| `el-fmt` | AST-preserving source formatting |
+| `el-lsp` | editor diagnostics, completion, formatting, and signature hover |
 | `el-span` | source spans |
 
 ## Invariants
@@ -48,7 +50,21 @@ PEG parse tree -> AST -> name resolution + type checking -> Typed AST
 
 ## Roadmap milestones
 
-Development proceeds through milestones M0–M9, each ending with working tests
-and a runnable example. See
+Milestones M0 through M9 complete v1. M10 adds anonymous functions with
+immutable snapshot captures. Later accepted decisions add syntax and libraries,
+including scalar package FFI, Math protocols, and fixed Unicode infix operators.
+See
 [`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/docs/DESIGN.md)
 section 15 for the current roadmap state.
+
+## Standard-library boundaries
+
+Modules in `stdlib/` are embedded EL source checked with each compilation.
+Collections, formatting, HTTP policy, file I/O, plain-socket policy, and string
+transformations are implemented in EL. Private runtime interfaces contain
+allocation, platform, foreign-memory, Unicode, and TLS details.
+
+Foreign calls have explicit declarations and verified boundary types. Generic
+Math and operator dispatch resolves during monomorphization; concrete Core
+rejects residual protocol dispatch. Existing closure conversion handles composed
+function captures. LLVM remains the backend, separate from semantic checking.

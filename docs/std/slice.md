@@ -1,6 +1,6 @@
 # Slice
 
-Algorithms accepting any contiguous length use `Slice(a)`. Slices are
+Algorithms accepting any contiguous length use `Slice[A]`. Slices are
 constructed and subdivided through functions rather than range syntax.
 
 ## Functions
@@ -8,7 +8,7 @@ constructed and subdivided through functions rather than range syntax.
 ### Slice.from_array
 
 ```el
-Slice.from_array(array: [a; N]) -> Slice(a)
+Slice.from_array[A](array: [A; N]) -> Slice[A]
 ```
 
 Creates a managed view over the array's elements. It is a compiler-provided
@@ -21,7 +21,7 @@ whole = Slice.from_array(array)
 ### Slice.subslice
 
 ```el
-Slice.subslice(slice: Slice(a), start: usize, length: usize) -> Slice(a)
+Slice.subslice[A](slice: Slice[A], start: usize, length: usize) -> Slice[A]
 ```
 
 Returns a bounds-checked view sharing the backing storage:
@@ -33,7 +33,7 @@ part = Slice.subslice(whole, 1, 2)
 ### Slice.copy
 
 ```el
-Slice.copy(slice: Slice(a)) -> Slice(a)
+Slice.copy[A](slice: Slice[A]) -> Slice[A]
 ```
 
 Creates a compact independent managed copy:
@@ -45,7 +45,7 @@ independent = Slice.copy(part)
 ### Slice.length
 
 ```el
-Slice.length(values: Slice(a)) -> usize
+Slice.length[A](values: Slice[A]) -> usize
 ```
 
 Returns the number of elements. It is O(1):

@@ -1,7 +1,7 @@
 const keywords = [
-  'def', 'defp', 'defmodule', 'defstruct', 'defprotocol', 'defimpl',
+  'module', 'struct', 'protocol', 'impl', 'fn', 'private',
   'defer', 'do', 'else', 'end', 'if', 'for', 'in', 'match', 'mut',
-  'return', 'when', 'while', 'with',
+  'return', 'while', 'with', 'break', 'continue', 'type',
 ]
 
 const builtinTypes = [
@@ -17,15 +17,19 @@ export const elLanguage = {
   displayName: 'EL',
   aliases: ['ell'],
   patterns: [
+    { include: '#block-comment' },
     {
-      match: '(#(?!\\[).*)',
+      match: '(#(?![\\[|]).*)',
       name: 'comment.line.number-sign.el',
     },
     {
       begin: '"',
       end: '"',
       name: 'string.quoted.double.el',
-      patterns: [{ match: '\\\\.', name: 'constant.character.escape.el' }],
+      patterns: [
+        { match: '\\\\.', name: 'constant.character.escape.el' },
+        { include: '#interpolation' },
+      ],
     },
     {
       begin: "'",
@@ -47,7 +51,26 @@ export const elLanguage = {
         '\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|[0-9][0-9_]*(?:\\.[0-9][0-9_]*)?(?:[eE][+-]?[0-9]+)?)\\b',
       name: 'constant.numeric.el',
     },
-    { match: '(\\|>|:=|::|->|<-|=>)', name: 'keyword.operator.el' },
+    { match: '(\\*\\*|⊕|⊖|⊗|⊙|×|⋅|∘|≈|\\|>|:=|::|->|<-|=>|&[1-9][0-9]*)', name: 'keyword.operator.el' },
     { match: '\\b[A-Z][A-Za-z0-9]*\\b', name: 'entity.name.type.el' },
   ],
+  repository: {
+    'block-comment': {
+      begin: '#\\|',
+      end: '\\|#',
+      name: 'comment.block.el',
+      patterns: [{ include: '#block-comment' }],
+    },
+    interpolation: {
+      begin: '#\\{',
+      end: '\\}',
+      name: 'meta.interpolation.el',
+      patterns: [{ include: '#braces' }, { include: '$self' }],
+    },
+    braces: {
+      begin: '\\{',
+      end: '\\}',
+      patterns: [{ include: '#braces' }, { include: '$self' }],
+    },
+  },
 }

@@ -1,120 +1,120 @@
 # Protocols
 
-Protocols declare behavior; implementations are explicit. They are EL's
-replacement for both interfaces and type classes.
+Protocols declare operations with static dispatch. Implementations are explicit;
+a matching function name alone does not satisfy a protocol.
 
-## Declaring a protocol
+## Declare and implement a protocol
 
 ```el
-defprotocol Show do
-  def show(value: Self) -> string
+module Geometry
+
+protocol Render do
+	fn render(value: Self) -> string
+end
+
+struct Point do
+	x: i64
+	y: i64
+end
+
+impl Render for Point do
+	fn render(value: Point) -> string do
+		"Point(#{value.x}, #{value.y})"
+	end
 end
 ```
 
-`Self` is the protocol's abstract target type.
+`Self` is the implementation's target type. The implementing package must own
+either the protocol or the target type. Protocol signatures and implementation
+methods are public; `private fn` is invalid in either place.
 
-## Implementing
+## Constrain generics
+
+Functions declare bounds with their type parameters:
 
 ```el
-defstruct Point do
-  x: i64
-  y: i64
-end
-
-defimpl Show, for: Point do
-  def show(value: Point) -> string do
-    "Point(" ++ Show.show(value.x) ++ ", " ++ Show.show(value.y) ++ ")"
-  end
+fn maximum[T: Ord](left: T, right: T) -> T do
+	if left >= right do left else right end
 end
 ```
 
-An implementation must be declared by the package owning either the protocol or
-the target type.
-
-## Constrained generics
-
-A generic function constrains a type parameter with `when`:
+Generic implementations declare parameters directly on the target type:
 
 ```el
-def max(left: a, right: a) -> a when a: Ord do
-  if left >= right do
-    left
-  else
-    right
-  end
+struct Box[T] do
+	value: T
+end
+
+impl Show for Box[T: Show] do
+	fn show(value: Box[T]) -> string do
+		Show.show(value.value)
+	end
 end
 ```
 
-Implementations for generic types can constrain their parameters too:
-
-```el
-defimpl Show, for: Box(a) when a: Show do
-  def show(value: Box(a)) -> string do
-    Show.show(value.value)
-  end
-end
-```
-
-Protocol dispatch is **static**. Protocol names are not runtime value types in
-v1, and a matching method name does not implicitly satisfy a protocol.
+`T: Eq + Hash` requires both protocols. Protocols are not runtime value types,
+and there is no protocol inheritance or implicit implementation.
 
 ## Associated types
 
-Protocols declare associated types explicitly, and implementations assign them
-explicitly:
+Protocols declare associated types with `type`; implementations assign them
+explicitly. This example uses an application-defined protocol:
 
 ```el
-defprotocol Iterable do
-  type Item
-  type Cursor
-
-  def iter(value: Self) -> Cursor
-  def next(cursor: Cursor) -> {:item, Item, Cursor} | :done
+protocol Source do
+	type Item
+	fn first(value: Self) -> Option[Item]
 end
 
-defimpl Iterable, for: List(a) do
-  type Item = a
-  type Cursor = List.Cursor(a)
+struct Batch[T] do
+	values: [T]
+end
 
-  def iter(value: List(a)) -> List.Cursor(a) do
-    # implementation
-  end
+impl Source for Batch[T] do
+	type Item = T
 
-  def next(cursor: List.Cursor(a)) ->
-      {:item, a, List.Cursor(a)} | :done do
-    # implementation
-  end
+	fn first(value: Batch[T]) -> Option[T] do
+		Enum.at(value.values, 0)
+	end
+end
+
+fn keep_item[S: Source](source: S, item: Source.Item[S]) -> Source.Item[S] do
+	item
 end
 ```
 
-Generic code uses a qualified projection to name the type selected by an
-implementation:
+`Source.Item[S]` names the type selected by the implementation for `S`.
+`Iterable` similarly declares `Item` and `Cursor`; `Reader` and `Writer` select
+an associated `Error` type.
 
-```el
-def collect(values: a) -> [Iterable.Item(a)] when a: Iterable do
-  # implementation
-end
-```
+## Derive implementations
 
-## Deriving
-
-`@derive [Eq, Show, Hash]` asks the compiler to generate implementations
-where the field constraints hold:
+`@derive` generates fieldwise implementations where their constraints hold:
 
 ```el
 @derive [Eq, Show, Hash]
-defstruct Point do
-  x: i64
-  y: i64
+struct Point do
+	x: i64
+	y: i64
 end
 ```
 
-A conflict between `@derive` and an explicit implementation is a compile-time
-error. Overlapping implementations, specialization, and implicit associated-type
-inference are also errors.
+Overlapping implementations, specialization, and a derived implementation that
+conflicts with an explicit one are compile-time errors. Floats have no `Eq`,
+`Ord`, `Hash`, or `Show` implementation, so a float field prevents those derives.
 
-## Core protocols
+## Core and numeric protocols
 
-The standard library defines `Eq`, `Ord`, `Show`, `Hash`, `Iterable`, `Writer`,
-`Reader`, and `Concat`. `==` and ordering operators lower through `Eq` and `Ord`;
-`++` lowers through `Concat`; and `for ... in` lowers through `Iterable`.
+| Protocol | Operation |
+| --- | --- |
+| `Eq`, `Ord` | Equality and ordering |
+| `Show`, `Hash` | Diagnostic text and hashing |
+| `Iterable` | Iteration through `for` and `Enum` |
+| `Reader`, `Writer` | Recoverable byte I/O |
+| `Concat` | `++` |
+| `Add`, `Sub`, `Mul`, `Div`, `Rem`, `Neg`, `Pow` | Arithmetic operators |
+| `Number`, `Integer`, `Float` | [Math functions](/std/math) |
+
+Each arithmetic operator needs its own bound, such as `T: Add + Mul`.
+`Number` does not imply `Add`. The fixed Unicode infix protocols also require
+separate implementations or bounds. See [Operators](/getting-started/operators).

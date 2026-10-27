@@ -8,26 +8,26 @@ scores = %{"Ada" => 42, "Grace" => 50}
 
 Map construction and every key operation require the key type to implement both
 `Eq` and `Hash`. Each `Map` signature below carries those constraints; the
-repeated `when k: Eq, k: Hash` clauses are omitted for readability.
+key parameter `K` has the bounds `Eq + Hash`; `V` is the value type.
 
 ## Functions
 
 ### Map.new
 
 ```el
-Map.new() -> Map(k, v)
+Map.new[K: Eq + Hash, V]() -> Map[K, V]
 ```
 
 Creates an empty map. The key and value types come from the expected type:
 
 ```el
-empty: Map(string, i64) = Map.new()   # {}
+empty: Map[string, i64] = Map.new()   # {}
 ```
 
 ### Map.fetch
 
 ```el
-Map.fetch(map: Map(k, v), key: k) -> Option(v)
+Map.fetch[K: Eq + Hash, V](map: Map[K, V], key: K) -> Option[V]
 ```
 
 Looks up `key`. Returns `{:some, value}` when the key is present and `:none`
@@ -35,15 +35,15 @@ otherwise. Maps do not support index syntax; `fetch` keeps absence explicit:
 
 ```el
 match Map.fetch(scores, "Ada") do
-  {:some, score} -> IO.println(score)
-  :none -> IO.println("missing")
+	{:some, score} -> IO.println(score)
+	:none -> IO.println("missing")
 end
 ```
 
 ### Map.put
 
 ```el
-Map.put(map: Map(k, v), key: k, value: v) -> Map(k, v)
+Map.put[K: Eq + Hash, V](map: Map[K, V], key: K, value: V) -> Map[K, V]
 ```
 
 Returns a new map with `key` bound to `value`. Replacing the value of an
@@ -56,7 +56,7 @@ scores = Map.put(scores, "Ada", 43)   # "Ada" keeps its position
 ### Map.remove
 
 ```el
-Map.remove(map: Map(k, v), key: k) -> Map(k, v)
+Map.remove[K: Eq + Hash, V](map: Map[K, V], key: K) -> Map[K, V]
 ```
 
 Returns a new map without `key`. Removing a key deletes its position; inserting
@@ -70,7 +70,7 @@ scores = Map.put(scores, "Ada", 44)   # "Ada" is now last
 ### Map.size
 
 ```el
-Map.size(map: Map(k, v)) -> usize
+Map.size[K: Eq + Hash, V](map: Map[K, V]) -> usize
 ```
 
 Returns the number of entries:

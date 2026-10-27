@@ -35,7 +35,7 @@ quotient = 10 / 2
 ```
 
 - Unconstrained integer literals default to `i64`; unconstrained floating
-  literals default to `f64`. Floats in EL are at least 64-bit precision.
+  literals default to `f64`. An expected `f32` type selects binary32 precision.
 - Integer division truncates toward zero.
 - Integer arithmetic is **checked for overflow in every build mode**.
 
@@ -90,7 +90,7 @@ used as conditions.
 ```el
 # Rejected: integer in a condition
 if 1 do
-  IO.println("unreachable")
+	IO.println("unreachable")
 end
 ```
 
@@ -99,7 +99,7 @@ the left side is not enough to determine the result.
 
 EL has **no `nil`**, `null`, nullable references, or implicit zero values.
 Absence of a value is expressed with the reserved core prelude type
-`Option(a) = {:some, a} | :none`, or with atoms such as `:none` and `:error`.
+`Option[a] = {:some, a} | :none`, or with atoms such as `:none` and `:error`.
 
 ## Atoms
 
@@ -122,8 +122,8 @@ as `:ok` and `:error`:
 
 ```el
 match Parser.parse_int(input) do
-  {:ok, value} -> value
-  {:error, reason} -> IO.report(reason)
+	{:ok, value} -> value
+	{:error, reason} -> IO.report(reason)
 end
 ```
 
@@ -171,15 +171,20 @@ A `rune` is a single Unicode scalar value, written with single quotes:
 letter = 'λ'
 ```
 
-::: warning Not in v1
-String interpolation, raw and multiline strings, and integer indexing are not
-part of v1.
+::: tip String literals and interpolation
+Raw and multiline string literals and integer indexing are unsupported.
+String interpolation uses `#{expression}` and formats through `Show`:
+
+```el
+IO.println("answer = #{42}")
+```
+
+Floats have no `Show`; use `Format.float(value, precision)` inside interpolation.
 :::
 
 ## Structural comparison
 
-EL provides `==`, `!=`, `<=`, `>=`, `<`, and `>` as comparison operators, plus
-the strict `===` and `!==` operators:
+EL provides `==`, `!=`, `<=`, `>=`, `<`, and `>` as comparison operators:
 
 ```el
 equal = "foo" == "foo"     # true
@@ -187,13 +192,7 @@ unequal = "foo" == "bar"   # false
 ordered = 1 < 2            # true
 ```
 
-Because there is no implicit numeric conversion, `===`/`!==` require the exact
-same type in addition to the same value:
-
-```el
-loose = 1 == 1     # true
-strict = 1 === 1.0 # false
-```
+Operands have matching types; numeric comparisons do not insert conversions.
 
 These operators perform *structural comparison*: values are equal when their
 structure, including nested contents, matches. Floats follow IEEE 754 (NaN,

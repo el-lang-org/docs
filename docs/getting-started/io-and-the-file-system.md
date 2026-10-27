@@ -10,18 +10,18 @@ and [`Process`](/std/process) references.
 
 ```el
 match File.open_read(path) do
-  {:ok, file} ->
-    defer do
-      match File.close(file) do
-        {:ok, _} -> unit
-        {:error, reason} -> IO.report(reason)
-      end
-    end
+	{:ok, file} ->
+		defer do
+			match File.close(file) do
+				{:ok, _} -> unit
+				{:error, reason} -> IO.report(reason)
+			end
+		end
 
-    process(file)
+		process(file)
 
-  {:error, reason} ->
-    IO.report(reason)
+	{:error, reason} ->
+		IO.report(reason)
 end
 ```
 
@@ -37,7 +37,7 @@ Standard collections use recursive diagnostic formatting. Map keys and values
 must both implement `Show`, and map entries retain insertion order:
 
 ```el
-counts: Map(string, usize) = %{"first" => 1, "second" => 2}
+counts: Map[string, usize] = %{"first" => 1, "second" => 2}
 IO.println(counts)
 IO.println(["nested", Show.show(#[3, 4])])
 ```
@@ -63,12 +63,12 @@ Inspect a stable kind instead of parsing `Show` output or a host error code:
 
 ```el
 match File.open_read(path) do
-  {:ok, file} -> process(file)
-  {:error, reason} ->
-    match File.error_kind(reason) do
-      :not_found -> IO.report("file not found")
-      _ -> IO.report(reason)
-    end
+	{:ok, file} -> process(file)
+	{:error, reason} ->
+		match File.error_kind(reason) do
+			:not_found -> IO.report("file not found")
+			_ -> IO.report(reason)
+		end
 end
 ```
 
@@ -84,19 +84,19 @@ immutable values implementing `Eq`, `Hash`, and `Show`, but not `Ord`.
   invocation:
 
   ```el
-  defer release(make_handle())
-  # make_handle runs now; release runs at scope exit
-  ```
+	defer release(make_handle())
+	# make_handle runs now; release runs at scope exit
+	```
 
 - A deferred block captures referenced outer bindings as immutable value
   snapshots and delays its body expressions:
 
   ```el
-  defer do
-    release(make_handle())
-    # make_handle runs at scope exit
-  end
-  ```
+	defer do
+		release(make_handle())
+		# make_handle runs at scope exit
+	end
+	```
 
 - Actions run once, in **last-in-first-out** order, on every normal exit from the
   innermost enclosing lexical block — including an early `return`. Loop-body
@@ -108,3 +108,35 @@ immutable values implementing `Eq`, `Hash`, and `Show`, but not `Ord`.
   mutable bindings declared inside the deferred block.
 - Deferred actions do **not** run after an unrecoverable runtime failure, an
   implementation abort, or external termination.
+
+## Whole-file text processing
+
+Whole-file helpers manage their own handle cleanup:
+
+```el
+match File.read_text("input.txt") do
+	{:ok, text} ->
+		match File.write_text("output.txt", String.downcase(text)) do
+			{:ok, _} -> IO.println("written")
+			{:error, reason} -> IO.report(reason)
+		end
+	_ -> IO.report("cannot read UTF-8 input")
+end
+```
+
+`File.read_bytes` and `File.write_bytes` work with raw bytes. Generic
+`IO.read_all` and `IO.write_string` accept any `Reader` or `Writer`, including
+application-defined implementations.
+
+## Console input and inspection
+
+`IO.gets("Name: ")` writes and flushes a prompt, then returns one line as
+`{:ok, string}`, `:eof`, or a tagged I/O or UTF-8 error. `IO.getn(prompt, count)`
+reads up to `count` Unicode scalar values. Line reads include the newline.
+
+`IO.read_line` and `IO.binread_line` accept standard input or a file reader and
+share buffering with raw reads. `IO.inspect(value)` prints its `Show` text and
+returns the same value for use in pipelines.
+
+See [IO](/std/io), [File](/std/file), and [ANSI](/std/ansi) for signatures.
+Networking uses [Net](/std/net) and [Http](/std/http), with explicit socket cleanup.

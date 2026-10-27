@@ -43,11 +43,11 @@ EL v1 has no exceptions. Recoverable errors are ordinary tagged values that you
 match exhaustively:
 
 ```el
-def print_number(input: string) do
-  match Parser.parse_int(input) do
-    {:ok, value} -> IO.println(value)
-    {:error, reason} -> IO.report(reason)
-  end
+fn print_number(input: string) do
+	match Parser.parse_int(input) do
+		{:ok, value} -> IO.println(value)
+		{:error, reason} -> IO.report(reason)
+	end
 end
 ```
 
@@ -58,11 +58,11 @@ used, every reachable arm must produce the same type (subject to expected-union
 injection):
 
 ```el
-def unwrap_or(result: {:ok, i64} | {:error, string}, fallback: i64) -> i64 do
-  match result do
-    {:ok, value} -> value
-    {:error, _reason} -> fallback
-  end
+fn unwrap_or(result: {:ok, i64} | {:error, string}, fallback: i64) -> i64 do
+	match result do
+		{:ok, value} -> value
+		{:error, reason} -> fallback
+	end
 end
 ```
 
@@ -70,8 +70,8 @@ A wildcard covers all remaining alternatives:
 
 ```el
 name = match status do
-  :ready -> "ready"
-  _ -> "not ready"
+	:ready -> "ready"
+	_ -> "not ready"
 end
 ```
 
@@ -98,9 +98,9 @@ normally ends with a wildcard or binding catch-all:
 
 ```el
 label = match status_code do
-  200 -> "ok"
-  404 -> "not found"
-  _ -> "other"
+	200 -> "ok"
+	404 -> "not found"
+	_ -> "other"
 end
 ```
 
@@ -119,8 +119,8 @@ avoiding nested `match` expressions for tagged-result pipelines:
 
 ```el
 with {:ok, left} <- parse_left(input),
-     {:ok, right} <- parse_right(input) do
-  {:ok, left + right}
+		 {:ok, right} <- parse_right(input) do
+	{:ok, left + right}
 end
 ```
 
@@ -136,28 +136,42 @@ exactly or through expected-union injection; without an expected type, the body
 establishes the result type:
 
 ```el
-def validate(registration: Registration) -> ValidationResult do
-  with :ok <- validate_username(registration.username),
-       :ok <- validate_email(registration.email),
-       :ok <- validate_age(registration.age) do
-    {:ok, make_user(registration)}
-  end
+fn validate(registration: Registration) -> ValidationResult do
+	with :ok <- validate_username(registration.username),
+			 :ok <- validate_email(registration.email),
+			 :ok <- validate_age(registration.age) do
+		{:ok, make_user(registration)}
+	end
 end
 ```
 
-::: warning Not in v1
-`with` has no `else` form. When failures need transformation, use an exhaustive
-`match` on the propagated value.
-:::
+### Transform failures with else
+
+An optional `else` matches the first unmatched clause value. Its arms must
+cover every possible failure from every clause. Clause bindings are unavailable
+inside these arms.
+
+```el
+fn pretty_or_error(text: string) -> string do
+	with {:ok, value} <- Json.decode(text) do
+		Json.format(value)
+	else
+		{:error, message} -> "invalid JSON: #{message}"
+	end
+end
+```
+
+An `else` arm that no clause can reach is rejected, as is `else` on a `with`
+whose clauses cannot fail.
 
 ## The `Option` type
 
 Positional lookup and similar operations return the reserved core prelude type
-`Option(a) = {:some, a} | :none`:
+`Option[a] = {:some, a} | :none`:
 
 ```el
 match Map.fetch(scores, "Ada") do
-  {:some, score} -> IO.println(score)
-  :none -> IO.println("missing")
+	{:some, score} -> IO.println(score)
+	:none -> IO.println("missing")
 end
 ```

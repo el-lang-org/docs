@@ -1,23 +1,23 @@
-# Lists and Tuples
+# Lists and tuples
 
 ## Lists
 
-Lists are immutable and homogeneous. Their type is `[a]`:
+Lists are immutable and homogeneous. Their type is `[A]`:
 
 ```el
 numbers: [i64] = [1, 2, 3]
 words: [string] = ["one", "two", "three"]
 ```
 
-List patterns support the empty list and head/tail decomposition. Lowercase type
-names in a signature introduce inferred type parameters:
+List patterns support the empty list and head/tail decomposition. Declare
+PascalCase type parameters in square brackets after the function name:
 
 ```el
-def map(values: [a], f: (a) -> b) -> [b] do
-  match values do
-    [] -> []
-    [value | rest] -> [f(value) | map(rest, f)]
-  end
+fn map[A, B](values: [A], f: (A) -> B) -> [B] do
+	match values do
+		[] -> []
+		[value | rest] -> [f(value) | map(rest, f)]
+	end
 end
 ```
 
@@ -56,26 +56,26 @@ User-written array types contain literal lengths. They may be generic over the
 item type but not over the length:
 
 ```el
-def first_of_pair(values: [a; 2]) -> a do
-  values[0]
+fn first_of_pair[A](values: [A; 2]) -> A do
+	values[0]
 end
 ```
 
-Symbolic `[a; N]`, length arithmetic, and `[a; _]` are not valid v1 source.
+Symbolic `[A; N]`, length arithmetic, and `[A; _]` are not valid v1 source.
 
 ## Slices
 
-Algorithms accepting any contiguous length use `Slice(a)`:
+Algorithms accepting any contiguous length use `Slice[A]`:
 
 ```el
-def sum(values: Slice(i64)) -> i64 do
-  mut total: i64 = 0
+fn sum(values: Slice[i64]) -> i64 do
+	mut total: i64 = 0
 
-  for value in values do
-    total := total + value
-  end
+	for value in values do
+		total := total + value
+	end
 
-  total
+	total
 end
 
 total = sum(Slice.from_array(#[1, 2, 3, 4]))
@@ -119,3 +119,13 @@ concatenation copies the left spine, so repeated `++` in a loop can be quadratic
 
 See the [`List`](/std/list), [`Array`](/std/array), and
 [`Slice`](/std/slice) references for the complete function listings.
+
+A mutable fixed-array local also permits indexed assignment:
+
+```el
+mut values = #[1, 2, 3]
+values[0] := 9
+```
+
+The update preserves earlier copies of the array. Other indexed types do not
+support this assignment form. See [Array](/std/array#indexed-updates).

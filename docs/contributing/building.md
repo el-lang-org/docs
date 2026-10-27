@@ -1,4 +1,4 @@
-# Building from Source
+# Building from source
 
 The source lives in the
 [`el` repository](https://github.com/el-lang-org/el). The authoritative build
@@ -23,12 +23,35 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
-Milestone 0 has no third-party Rust dependencies. After Cargo has fetched any
-future locked dependencies, the workspace must also build offline:
+After Cargo has fetched the locked dependencies, the workspace also builds
+offline:
 
 ```sh
 cargo build --workspace --locked --offline
 ```
+
+## Build and install native binaries
+
+On Darwin arm64 with LLVM 22.1.8 installed:
+
+```sh
+make build-install INSTALL_DIR="$HOME/.local/bin"
+```
+
+`make build` compiles release `el` and `elc` with the native backend and managed
+runtime. `make install` copies existing binaries. The default installation
+folder is `$HOME/.local/bin`. `CARGO_TARGET_DIR` changes the Cargo output folder
+for both targets. Override LLVM with `LLVM_SYS_221_PREFIX="/path/to/llvm"`.
+
+The equivalent native Cargo build is:
+
+```sh
+LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm \
+  cargo build --release -p el-cli --features managed-runtime
+```
+
+A default `cargo build --workspace` supports frontend development without LLVM.
+It does not enable native executable compilation.
 
 ## LLVM prerequisite
 
@@ -108,3 +131,39 @@ python3 tools/generate_unicode_grapheme_tables.py
 
 Normal builds consume the checked-in generated files and do not require Python,
 network access, a host Unicode library, or locale data.
+
+The lowercase mapping uses checked-in EL data generated from pinned Rust
+Unicode 17.0.0 tables:
+
+```sh
+rustc tools/generate_lowercase.rs -o /tmp/el-generate-lowercase
+/tmp/el-generate-lowercase
+el fmt stdlib/string.ell
+```
+
+## Network TLS validation
+
+Darwin links the system Network and Security frameworks. No separate TLS
+library is needed by EL executables. Offline tests use OpenSSL 3 when available
+and skip with a reason otherwise. They do not install trust roots.
+
+Trusted TLS, host-name mismatch, and TLS read-timeout tests require network opt-in:
+
+```sh
+EL_NET_TLS_ONLINE=1 LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm \
+  cargo test -p el-driver --features gc-stress-test --test native tls_trusted -- --nocapture
+```
+
+Default validation uses local peers and reserved `.invalid` names.
+
+## Sanitizers and fuzzing
+
+`EL_RUNTIME_SANITIZE=address,undefined` instruments the private C runtime;
+Boehm GC remains uninstrumented. Set `ASAN_OPTIONS=detect_leaks=0` because the
+collector's allocations are not tracked. Use the same sanitizer setting for
+all code linking that runtime. Unset the setting to return to a normal build.
+
+Workspace tests include seeded parser and formatter mutations. Coverage-guided
+`cargo-fuzz` targets under `fuzz/` need nightly Rust. See the authoritative
+[build instructions](https://github.com/el-lang-org/el/blob/main/docs/BUILDING.md#sanitizers-and-fuzzing)
+for commands and corpus handling.

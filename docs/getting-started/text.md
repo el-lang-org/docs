@@ -11,14 +11,14 @@ byte_count = String.byte_size(text)
 grapheme_count = String.length(text)
 
 for byte in String.bytes(text) do
-  inspect_byte(byte)
+	inspect_byte(byte)
 end
 
 codepoints: [rune] = String.codepoints(text)
 graphemes: [string] = String.graphemes(text)
 
 for grapheme in graphemes do
-  IO.println(grapheme)
+	IO.println(grapheme)
 end
 ```
 
@@ -27,11 +27,11 @@ Allocation-sensitive traversal uses explicitly named views:
 
 ```el
 for codepoint in String.codepoint_view(text) do
-  inspect_codepoint(codepoint)
+	inspect_codepoint(codepoint)
 end
 
 for grapheme in String.grapheme_view(text) do
-  inspect_grapheme(grapheme)
+	inspect_grapheme(grapheme)
 end
 ```
 
@@ -47,7 +47,7 @@ validation and parsing intent explicit:
 
 ```el
 if String.empty(text) == false and String.contains(text, "@") do
-  fields: [string] = String.split(text, "@")
+	fields: [string] = String.split(text, "@")
 end
 ```
 
@@ -95,10 +95,10 @@ buffer := Buffer.append_byte(buffer, 0x20)
 buffer := Buffer.append_string(buffer, "world")
 
 match Buffer.to_string(buffer) do
-  {:ok, text} -> IO.println(text)
-  {:error, reason} ->
-    offset = String.utf8_error_offset(reason)
-    IO.report("invalid UTF-8 at byte " ++ Show.show(offset))
+	{:ok, text} -> IO.println(text)
+	{:error, reason} ->
+		offset = String.utf8_error_offset(reason)
+		IO.report("invalid UTF-8 at byte " ++ Show.show(offset))
 end
 ```
 
@@ -131,14 +131,14 @@ bits; byte segments may use a dynamic size measured in bytes:
 
 ```el
 packet = <<version::unsigned-big-size(8),
-  length::unsigned-big-size(16),
-  payload::bytes>>
+	length::unsigned-big-size(16),
+	payload::bytes>>
 
 match packet do
-  <<version::unsigned-big-size(8),
-    length::unsigned-big-size(16),
-    payload::bytes-size(usize(length))>> -> process(version, payload)
-  _ -> IO.report("invalid packet")
+	<<version::unsigned-big-size(8),
+		length::unsigned-big-size(16),
+		payload::bytes-size(usize(length))>> -> process(version, payload)
+	_ -> IO.report("invalid packet")
 end
 ```
 
@@ -153,8 +153,8 @@ header: bits = Bits.slice(all, 0, 12)
 first: bool = header[0]
 
 match Bits.to_bytes(header) do
-  {:some, data} -> consume(data)
-  :none -> IO.report("not byte-aligned")
+	{:some, data} -> consume(data)
+	:none -> IO.report("not byte-aligned")
 end
 ```
 
@@ -162,3 +162,26 @@ end
 most-significant bit of the first source byte, and `++` concatenates bit
 sequences. Float, UTF, explicit-unit, and non-byte-aligned source segments are
 post-v1.
+
+## Interpolation and formatting
+
+`#{expression}` formats a value through `Show` inside a string. Use `\#{` for
+a literal interpolation opener. Nested expressions can contain their own
+string literals:
+
+```el
+count: usize = 3
+IO.println("loaded #{count} items")
+IO.println("status: #{String.downcase("READY")}")
+```
+
+Floats have no `Show`; format them explicitly. Width and precision are library
+functions rather than interpolation specifiers:
+
+```el
+IO.println("pi = #{Format.float(Math.pi(), 2)}")
+IO.println(Format.pad_left("42", 5, "0"))
+```
+
+See [Format](/std/format) for padding and precision and [Json](/std/json) for
+JSON decoding, pretty printing, and compact encoding.
