@@ -38,6 +38,7 @@ match Process.get_env("HOME") do
   {:ok, value} -> IO.println(value)
   :not_found -> IO.println("unset")
   {:error, :invalid_name} -> IO.println("invalid name")
+  {:error, :invalid_text} -> IO.println("value is not UTF-8")
 end
 ```
 

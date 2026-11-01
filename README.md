@@ -47,6 +47,37 @@ docs/
 Content is written in Markdown; code samples use the `el` language. The
 normative specifications live in the [el-lang] repository.
 
+## Standard-library reference checks
+
+Every public function has a level-two or level-three heading, its signature,
+a description, and an EL usage example. The heading gives the function an
+entry in the right-hand outline.
+
+Check the reference against the checked-in API inventory:
+
+```sh
+npm run check:stdlib
+```
+
+The production build runs this check before VitePress. To compare the reference
+with a local compiler checkout, run:
+
+```sh
+npm run check:stdlib -- --source ../el-lang
+```
+
+After an intentional public API change, refresh the inventory and update every
+reported reference entry:
+
+```sh
+npm run check:stdlib -- --source ../el-lang --write-api
+```
+
+The source audit reads public module functions and compiler intrinsic tables.
+It excludes private functions, protocol implementation methods, and
+`native_*` implementation helpers. Numeric conversions and all integer wrapping
+functions are included.
+
 ## Contributing
 
 See [contributing](/contributing/) for guidelines.

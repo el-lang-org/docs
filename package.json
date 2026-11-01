@@ -5,8 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "vitepress dev docs",
-    "build": "vitepress build docs",
-    "preview": "vitepress preview docs"
+    "build": "npm run check:stdlib && vitepress build docs",
+    "preview": "vitepress preview docs",
+    "check:stdlib": "node scripts/check-stdlib-docs.mjs"
   },
   "devDependencies": {
     "vitepress": "^1.6.4"

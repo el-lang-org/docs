@@ -45,3 +45,9 @@ Reference signatures display type parameters and bounds, such as
 
 Core protocols define static operations. See [Protocols](/getting-started/protocols)
 and [Operators](/getting-started/operators) for arithmetic and Unicode infix dispatch.
+
+## Core callable protocols
+
+- [Show](/std/show) converts values to diagnostic text.
+- [Reader](/std/reader) and [Writer](/std/writer) provide byte operations.
+- [Numeric conversions and wrapping arithmetic](/std/numeric) list every integer wrapping function.

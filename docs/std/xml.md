@@ -29,11 +29,73 @@ declaration is an ordinary `:instruction` node.
 
 ## Parse and format
 
+### Xml.parse
+
 ```el
 Xml.parse(text: string) -> {:ok, Xml.Document} | {:error, :malformed, string}
+```
+
+Parses `text` as one complete XML document. Returns `{:ok, Document}`, or
+`{:error, :malformed, message}` when `text` is not well-formed, where
+`message` reads `parse error: <detail> at line <n>, column <m>` (the column
+counts characters).
+
+```el
+match Xml.parse("<root><item id=\"1\">EL</item></root>") do
+	{:ok, document} ->
+		IO.println(document.root.name) # root
+	{:error, :malformed, message} -> IO.report(message)
+end
+```
+
+### Xml.format
+
+```el
 Xml.format(document: Xml.Document) -> string
+```
+
+Pretty-prints `document` with two-space indentation and no trailing newline.
+An element that contains text is emitted on one line exactly as parsed;
+layout-only whitespace between other nodes is regenerated.
+
+```el
+match Xml.parse("<root><item id=\"1\">EL</item></root>") do
+	{:ok, document} ->
+		IO.println(Xml.format(document))
+	{:error, :malformed, message} -> IO.report(message)
+end
+```
+
+### Xml.encode
+
+```el
 Xml.encode(document: Xml.Document) -> string
+```
+
+Serializes `document` on one line, with each text node exactly as parsed.
+
+```el
+match Xml.parse("<root><item id=\"1\">EL</item></root>") do
+	{:ok, document} ->
+		IO.println(Xml.encode(document))
+	{:error, :malformed, message} -> IO.report(message)
+end
+```
+
+### Xml.reformat
+
+```el
 Xml.reformat(text: string) -> {:ok, string} | {:error, :malformed, string}
+```
+
+Parses `text` and pretty-prints it (`parse` then `format`). Returns `{:ok,
+string}`, or the `{:error, :malformed, message}` from `parse`.
+
+```el
+match Xml.reformat("<root><item>EL</item></root>") do
+	{:ok, text} -> IO.println(text)
+	{:error, :malformed, message} -> IO.report(message)
+end
 ```
 
 `parse` consumes one complete well-formed document, with matching tags, quoted
@@ -72,10 +134,55 @@ This prints:
 
 ## Inspect elements
 
+### Xml.attribute
+
 ```el
 Xml.attribute(element: Xml.Element, name: string) -> Option[string]
+```
+
+Returns `{:some, value}` for the attribute called `name` on `element`, or
+`:none` if it has no such attribute.
+
+```el
+match Xml.parse("<root><item id=\"1\">EL</item></root>") do
+	{:ok, document} ->
+		value = Xml.attribute(document.root, "id") # :none
+	{:error, :malformed, message} -> IO.report(message)
+end
+```
+
+### Xml.elements
+
+```el
 Xml.elements(element: Xml.Element, name: string) -> [Xml.Element]
+```
+
+Returns the direct child elements of `element` called `name`, in document
+order; `[]` if there are none. Does not search deeper descendants.
+
+```el
+match Xml.parse("<root><item id=\"1\">EL</item></root>") do
+	{:ok, document} ->
+		items = Xml.elements(document.root, "item") # one direct child
+	{:error, :malformed, message} -> IO.report(message)
+end
+```
+
+### Xml.text_content
+
+```el
 Xml.text_content(element: Xml.Element) -> string
+```
+
+Returns the text and CDATA of `element` and all its descendants, concatenated
+in document order. Markup and comments contribute nothing.
+
+```el
+match Xml.parse("<root><item id=\"1\">EL</item></root>") do
+	{:ok, document} ->
+		IO.println(Xml.text_content(document.root)) # EL
+	{:error, :malformed, message} -> IO.report(message)
+end
 ```
 
 `attribute` returns the named attribute or `:none`. `elements` returns matching
