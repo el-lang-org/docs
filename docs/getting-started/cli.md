@@ -43,6 +43,10 @@ Outputs are written beneath the manifest root at
 `build/<target-triple>/<debug-or-release>/<package-name>` on Darwin.
 Development builds include debug information and low optimization.
 
+With `[native].isolated` libraries, the build also writes
+`<package-name>-ffi-helper` beside the executable. Deploy both files together.
+See [Isolate a native library](/std/ffi#isolate-a-native-library).
+
 ## el run and el r
 
 Builds the executable and launches it. `el r` is an exact alias. Program

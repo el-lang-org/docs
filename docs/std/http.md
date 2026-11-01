@@ -24,25 +24,31 @@ end
 These types belong to `Http`: construct `%Http.Request{...}` or
 `%Http.Response{...}`. Headers preserve wire order.
 
-```el
-@type Error = {:malformed, string} | :header_too_large | :body_too_large |
-	{:unsupported_scheme, string} | {:net, Net.Error}
-```
+Failures use `{:error, reason, message}`. Network reasons propagate directly
+alongside HTTP reasons. Messages contain details such as the malformed field
+or unsupported scheme; their wording is not a control-flow contract.
 
-`Http.Error` preserves structured network failures.
+```el
+@type Http.ReadErrorReason =
+	:malformed | :header_too_large | :body_too_large | :timed_out | :closed | :connection_reset | :other
+@type Http.RequestErrorReason =
+	:malformed | :header_too_large | :body_too_large | :unsupported_scheme |
+	:connection_refused | :host_not_found | :timed_out | :tls_failed |
+	:certificate_invalid | :closed | :connection_reset | :other
+```
 
 ## Client
 
 ```el
-Http.request(method: string, url: string, headers: [{string, string}], body: bytes) -> {:ok, Http.Response} | {:error, Http.Error}
-Http.get(url: string) -> {:ok, Http.Response} | {:error, Http.Error}
-Http.post(url: string, content_type: string, body: bytes) -> {:ok, Http.Response} | {:error, Http.Error}
+Http.request(method: string, url: string, headers: [{string, string}], body: bytes) -> {:ok, Http.Response} | {:error, Http.RequestErrorReason, string}
+Http.get(url: string) -> {:ok, Http.Response} | {:error, Http.RequestErrorReason, string}
+Http.post(url: string, content_type: string, body: bytes) -> {:ok, Http.Response} | {:error, Http.RequestErrorReason, string}
 ```
 
 URLs accept HTTP and HTTPS, optional decimal ports, bracketed IPv6 hosts, paths,
 and encoded queries. Default ports are 80 and 443. A missing path becomes `/`.
 User info, fragments, and empty hosts are rejected. Other schemes return
-`{:unsupported_scheme, scheme}`.
+`{:error, :unsupported_scheme, message}` with the scheme in the message.
 
 Each call opens and closes one connection with 30-second connection, read, and
 write timeouts. HTTPS verifies system trust and the host name. The client sets
@@ -56,17 +62,17 @@ match Http.get("http://127.0.0.1:8080/hello") do
 		IO.println(response.status)
 		match String.from_bytes(response.resp_body) do
 			{:ok, text} -> IO.println(text)
-			{:error, reason} -> IO.report(String.utf8_error_offset(reason))
+			{:error, :invalid_utf8, message} -> IO.report(message)
 		end
-	{:error, _} -> IO.report("HTTP request failed")
+	{:error, _, message} -> IO.report(message)
 end
 ```
 
 ## Server
 
 ```el
-Http.serve(listener: Net.Listener, handler: (Http.Request) -> Http.Response) -> {:error, Http.Error}
-Http.serve_one(listener: Net.Listener, handler: (Http.Request) -> Http.Response) -> {:ok, unit} | {:error, Http.Error}
+Http.serve(listener: Net.Listener, handler: (Http.Request) -> Http.Response) -> {:error, :closed | :other, string}
+Http.serve_one(listener: Net.Listener, handler: (Http.Request) -> Http.Response) -> {:ok, unit} | {:error, :timed_out | :closed | :connection_reset | :other, string}
 Http.response(status: u16, body: string) -> Http.Response
 ```
 
@@ -93,10 +99,10 @@ runs GET and POST clients and a server without an external service.
 ```el
 Http.header(headers: [{string, string}], name: string) -> Option[string]
 Http.put_header(headers: [{string, string}], name: string, value: string) -> [{string, string}]
-Http.encode_request(request: Http.Request, host: string) -> {:ok, bytes} | {:error, Http.Error}
-Http.encode_response(response: Http.Response) -> {:ok, bytes} | {:error, Http.Error}
-Http.read_request(stream: Net.Stream) -> {:ok, Http.Request} | {:error, Http.Error}
-Http.read_response(stream: Net.Stream, method: string) -> {:ok, Http.Response} | {:error, Http.Error}
+Http.encode_request(request: Http.Request, host: string) -> {:ok, bytes} | {:error, :malformed | :header_too_large | :body_too_large, string}
+Http.encode_response(response: Http.Response) -> {:ok, bytes} | {:error, :malformed | :header_too_large | :body_too_large, string}
+Http.read_request(stream: Net.Stream) -> {:ok, Http.Request} | {:error, Http.ReadErrorReason, string}
+Http.read_response(stream: Net.Stream, method: string) -> {:ok, Http.Response} | {:error, Http.ReadErrorReason, string}
 ```
 
 Header names compare with ASCII case folding. Lookup returns the first match;
@@ -108,7 +114,7 @@ Lines have a maximum of 8192 bytes including terminators, messages have at most
 Readers accept CRLF or LF, Content-Length, and chunked transfer coding. They
 reject conflicting or duplicate framing fields. Requests without framing have
 empty bodies; unframed responses read until EOF. HEAD responses and statuses
-1xx, 204, and 304 are bodyless. Truncation returns `{:malformed, message}`.
+1xx, 204, and 304 are bodyless. Truncation returns `{:error, :malformed, message}`.
 
 Encoders use CRLF, replace Content-Length with the byte count, and remove
 Transfer-Encoding. Request encoding replaces Host. They validate metadata,

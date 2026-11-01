@@ -57,3 +57,14 @@ contribution guidance below mirrors the repository's own rules.
 
 See [Building from Source](/contributing/building) for the exact commands and
 [Compiler Architecture](/contributing/architecture) for the stage overview.
+
+## Public EL function comments
+
+Write a `#` comment block directly above every public EL function, including
+examples. State what the function does, what each argument means, what it
+returns, and when it fails or returns `:none` or `:error`. Include units,
+ownership, and valid ranges where relevant. Add a call example when usage is
+not obvious. Update the comment whenever the signature or behavior changes.
+
+Keep functions in calling order, with callers above their helpers. Put tests
+and test-only helpers at the bottom of the file.

@@ -178,7 +178,7 @@ Bare names resolve through lexical scope, the current module, and the fixed
 prelude. A local binding shadows a bare function name. Qualified public names
 remain available. Every package in a resolved graph has a distinct root namespace.
 
-Prelude roots such as `Json`, `Math`, `Net`, and `Http` are reserved against
+Prelude roots such as `JSON`, `Xml`, `Math`, `Net`, `Http`, `Actor`, and `Task` are reserved against
 package declarations and dependency root namespaces. The prelude provides
 qualified functions, with no bare function imports.
 

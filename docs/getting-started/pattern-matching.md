@@ -152,9 +152,10 @@ cover every possible failure from every clause. Clause bindings are unavailable
 inside these arms.
 
 ```el
+# Formats text as JSON, or returns a message when the document is invalid.
 fn pretty_or_error(text: string) -> string do
-	with {:ok, value} <- Json.decode(text) do
-		Json.format(value)
+	with {:ok, value} <- JSON.decode(text) do
+		JSON.format(value)
 	else
 		{:error, message} -> "invalid JSON: #{message}"
 	end

@@ -19,7 +19,8 @@ Reference signatures display type parameters and bounds, such as
 - [String](/std/string), [Rune](/std/rune), and [Buffer](/std/buffer)
 - [Bytes](/std/bytes) and [Bits](/std/bits)
 - [Format](/std/format) for padding and float precision
-- [Json](/std/json) for parsed JSON documents
+- [JSON](/std/json) for parsed JSON documents
+- [Xml](/std/xml) for XML trees, parsing, and formatting
 
 ## I/O and networking
 
@@ -27,6 +28,13 @@ Reference signatures display type parameters and bounds, such as
 - [Net](/std/net) for TCP listeners and TCP or TLS client streams
 - [Http](/std/http) for HTTP/1.1 clients, messages, and sequential servers
 - [Native FFI](/std/ffi) for explicitly opted-in C calls and foreign memory
+
+## Concurrency
+
+- [Actor](/std/actor) for typed messages, calls, monitors, links, and names
+- [Mailbox](/std/mailbox) for FIFO receive and timed receive
+- [Task](/std/task) for asynchronous results and bounded parallel work
+- [Supervisor](/std/supervisor) for one-for-one child restarts
 
 ## Numbers and system services
 

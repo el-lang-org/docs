@@ -1,148 +1,114 @@
 # IO
 
-Console convenience functions, process-owned streams, and error accessors.
+`IO` provides console output, standard streams, and generic operations on open
+devices. A device can be a file handle, network stream, standard stream, or
+user-defined `Reader` or `Writer`.
 
-## Functions
-
-### IO.print
+## Console output
 
 ```el
 IO.print[A: Show](value: A) -> unit
+IO.println[A: Show](value: A) -> unit
+IO.report[A: Show](value: A) -> unit
+IO.inspect[T: Show](value: T) -> T
 ```
 
-Writes to standard output without a newline. Accepts any value implementing
-`Show`; failure is unrecoverable:
+`print` writes to standard output without a newline. `println` appends one
+newline, and `report` writes to standard error with one newline. These
+functions format through `Show`; an output failure is unrecoverable. `inspect` prints to standard output with a newline and returns
+the input value for use in pipelines.
 
 ```el
 IO.print("progress: ")
+IO.println(42)
+IO.inspect(["ready", "waiting"]) # ["ready", "waiting"]
 ```
 
-### IO.println
+Top-level strings print without added quotes. Strings nested in tuples,
+collections, and derived struct output are quoted and escaped. Collections
+print recursively as `{a, b}`, `[a, b]`, `#[a, b]`, `Slice[a, b]`, and
+`%{key => value}`. Maps keep insertion order. These are diagnostic forms with
+no stable serialization contract.
 
-```el
-IO.println[A: Show](value: A) -> unit
-```
-
-Writes to standard output with one newline:
-
-```el
-IO.println("Hello, world!")
-```
-
-### IO.report
-
-```el
-IO.report[A: Show](value: A) -> unit
-```
-
-Writes to standard error with one newline:
-
-```el
-IO.report(reason)
-```
-
-### IO.stdin
+## Standard streams
 
 ```el
 IO.stdin() -> IO.Stdin
-```
-
-Returns the process-owned standard input stream. It implements `Reader`.
-
-### IO.stdout
-
-```el
 IO.stdout() -> IO.Stdout
-```
-
-Returns the process-owned standard output stream. It implements `Writer`.
-
-### IO.stderr
-
-```el
 IO.stderr() -> IO.Stderr
 ```
 
-Returns the process-owned standard error stream. It implements `Writer`.
-
-### IO.error_kind
-
-```el
-IO.error_kind(error: IO.Error) -> IO.ErrorKind
-```
-
-Returns the stable, portable error kind.
-
-### IO.error_operation
+These process-owned handles are shared by actors. EL programs do not close them. `IO.Stdin` implements `Reader` with
+`ErrorReason = :other`. `IO.Stdout` and `IO.Stderr` implement `Writer` with:
 
 ```el
-IO.error_operation(error: IO.Error) -> IO.Operation
+@type IO.WriteErrorReason = :broken_pipe | :out_of_space | :other
 ```
 
-Identifies the failed operation.
-
-### IO.error_code
-
-```el
-IO.error_code(error: IO.Error) -> Option[i64]
-```
-
-Returns an optional target-dependent `i64` error code.
-
-## Notes
-
-`IO.print`, `IO.println`, and `IO.report` format through `Show`; this is not a
-general implicit conversion to `string`. Collections use recursive diagnostic
-formatting: tuples as `{a, b}`, lists as `[a, b]`, arrays as `#[a, b]`, slices
-as `Slice[a, b]`, and maps as `%{key => value}` in insertion order. These forms
-are for human-readable diagnostics, not parsing or stable serialization.
-Programs needing recoverable behavior use the `Reader` and `Writer` protocols
-with `IO.stdin`, `IO.stdout`, or `IO.stderr`. These process-owned handles are
-not closed by EL programs. Their associated error type is `IO.Error`; standard
-I/O, file, and UTF-8 errors are immutable values implementing `Eq`, `Hash`, and
-`Show`, but not `Ord`.
+Standard-stream operations run inside runtime critical sections, so an actor
+cannot be killed partway through an operation on shared stream state. A kill
+waits until the operation leaves that section.
 
 ## Generic readers and writers
 
 ```el
-IO.read_all[R: Reader](reader: R) -> {:ok, bytes} | {:error, Reader.Error[R]}
-IO.write_string[W: Writer](writer: W, text: string) -> {:ok, unit} | {:error, Writer.Error[W]}
+IO.binread[R: Reader](device: R, max_bytes: usize) ->
+	{:ok, bytes} | :eof | {:error, Reader.ErrorReason[R], string}
+IO.binwrite[W: Writer](device: W, data: bytes) ->
+	{:ok, unit} | {:error, Writer.ErrorReason[W], string}
+IO.flush[W: Writer](device: W) ->
+	{:ok, unit} | {:error, Writer.ErrorReason[W], string}
+IO.read_all[R: Reader](reader: R) ->
+	{:ok, bytes} | {:error, Reader.ErrorReason[R], string}
+IO.write[W: Writer](device: W, text: string) ->
+	{:ok, unit} | {:error, Writer.ErrorReason[W], string}
 ```
 
-`read_all` reads until EOF. `write_string` encodes UTF-8 and writes all bytes.
-Both work with user-defined protocol implementations and preserve their
-associated error type.
+`binread` delegates once to `Reader.read` and returns at most `max_bytes`.
+A zero-byte request returns empty bytes, including at EOF. Other successful
+reads contain at least one byte and may be shorter than requested.
 
-## Inspection
+`binwrite` delegates once to `Writer.write`, which writes all bytes or returns
+an error. `flush` delegates once to `Writer.flush`. `read_all` reads until EOF;
+`write` encodes UTF-8 and writes all bytes. All preserve the implementation's
+reason and message, including user-defined implementations.
 
 ```el
-IO.inspect[T: Show](value: T) -> T
+match IO.write(IO.stdout(), "hello\n") do
+	{:ok, _} -> unit
+	{:error, :broken_pipe, _} -> unit
+	{:error, _, message} -> IO.report(message)
+end
 ```
-
-Prints `Show` text and a newline, then returns the input value. Strings are
-printed without added quotes. Returning the value makes inspection useful
-inside pipelines.
 
 ## Buffered input
 
 ```el
-IO.binread_line(source: IO.LineSource) -> {:ok, bytes} | :eof | {:error, IO.Error} | {:error, File.Error}
-IO.read_line(source: IO.LineSource) -> {:ok, string} | :eof | {:error, IO.Error} | {:error, File.Error} | {:error, String.Utf8Error}
-IO.gets(message: string) -> {:ok, string} | :eof | {:error, IO.Error} | {:error, String.Utf8Error}
-IO.getn(message: string, count: usize) -> {:ok, string} | :eof | {:error, IO.Error} | {:error, String.Utf8Error}
+@type IO.LineSource = IO.Stdin | File.Reader
+IO.binread_line(source: IO.LineSource) ->
+	{:ok, bytes} | :eof | {:error, :closed | :is_directory | :other, string}
+IO.read_line(source: IO.LineSource) ->
+	{:ok, string} | :eof | {:error, :closed | :is_directory | :invalid_utf8 | :other, string}
+IO.gets(message: string) ->
+	{:ok, string} | :eof | {:error, :broken_pipe | :out_of_space | :invalid_utf8 | :other, string}
+IO.getn(message: string, count: usize) ->
+	{:ok, string} | :eof | {:error, :broken_pipe | :out_of_space | :invalid_utf8 | :other, string}
 ```
 
-`IO.LineSource` is `IO.Stdin | File.Reader`. Line reads include the trailing
-newline and return an unterminated final line before `:eof`. Text functions
-validate UTF-8; an invalid line is consumed, and its error offset is relative
-to that line.
+`binread_line` narrows its reasons to the static source type: `:other` for
+`IO.Stdin`, or `File.StreamReadErrorReason` for `File.Reader`. Line reads
+include the trailing newline and return an unterminated final line before
+`:eof`. Text functions validate UTF-8 and consume an invalid line before
+returning `{:error, :invalid_utf8, message}`. The message includes a byte offset
+relative to that line.
 
 `gets` writes and flushes a prompt before reading a line from standard input.
-`getn` prompts and reads Unicode scalar values, up to `count`, rather than
-bytes or grapheme clusters. Prompt failures return `IO.Error`.
+`getn` prompts and reads up to `count` Unicode scalar values, rather than bytes
+or grapheme clusters. Prompt failures use `IO.WriteErrorReason`.
 
 Standard input and file readers share an 8192-byte read-ahead buffer between
-line reads, `Reader.read`, and `read_all`. Copies share buffer state. Raw reads
-may return fewer than the requested bytes after one OS read.
+line reads, `IO.binread`, and `IO.read_all`. Copies share buffer state. The
+line functions accept only `IO.LineSource`; network lines use
+[Net.binread_line](/std/net#stream-i-o-and-cleanup).
 
-Terminal escape strings live in the separate [ANSI](/std/ansi) prelude root.
+Terminal escape strings live in [ANSI](/std/ansi).

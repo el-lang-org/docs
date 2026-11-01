@@ -29,7 +29,7 @@ PEG parse tree -> AST -> name resolution + type checking -> Typed AST
 | `el-types` | type checking, inference, unions, exhaustiveness |
 | `el-ir` | typed AST and Generic/Concrete Core IR contracts, lowering, verification |
 | `el-codegen` | monomorphization and LLVM lowering (Inkwell, `llvm` feature) |
-| `el-runtime` | private allocation ABI, Boehm GC, Unicode tables, TLS, and native helpers |
+| `el-runtime` | private allocation ABI, Boehm GC, actor scheduling, socket poller, isolated FFI helper, Unicode, and TLS |
 | `el-driver` | packages, manifests, lockfiles, build orchestration, native tests |
 | `el-cli` | `el` package commands and the `elc` single-file compiler |
 | `el-fmt` | AST-preserving source formatting |
@@ -52,7 +52,8 @@ PEG parse tree -> AST -> name resolution + type checking -> Typed AST
 
 Milestones M0 through M9 complete v1. M10 adds anonymous functions with
 immutable snapshot captures. Later accepted decisions add syntax and libraries,
-including scalar package FFI, Math protocols, and fixed Unicode infix operators.
+including package FFI, Math protocols, fixed Unicode infix operators,
+character-code literals, actors, tasks, and supervision.
 See
 [`DESIGN.md`](https://github.com/el-lang-org/el/blob/main/docs/DESIGN.md)
 section 15 for the current roadmap state.
@@ -68,3 +69,40 @@ Foreign calls have explicit declarations and verified boundary types. Generic
 Math and operator dispatch resolves during monomorphization; concrete Core
 rejects residual protocol dispatch. Existing closure conversion handles composed
 function captures. LLVM remains the backend, separate from semantic checking.
+
+## Library operations and Core IR
+
+Library behavior stays in embedded EL source over small runtime interfaces.
+`for` lowers through `Iterable.iter` and `Iterable.next` cursors for standard
+and user-defined sources. List cursors advance by tail, and string-view cursors
+advance by byte offset. `Enum` traversal functions use those loops.
+
+Native library services use `StandardCall` rows in `RUNTIME_TABLE`. Each row
+records the signature, runtime symbol, ABI argument order, and collection
+behavior. The checker and Typed AST use that table too. A new library function
+does not require a new Core IR operation. Run `sh scripts/check-core-ir-budget.sh`
+to check the operation and standard-function budgets.
+
+Actor prelude modules use private generic foreign declarations to pass erased
+messages and closures to the runtime. Core IR inserts `Safepoint` at function
+entries and loop cycles. Code generation emits a poll for kill, stack-limit,
+and scheduling checks. Literal reason patterns and union widening use existing
+union operations, with no error-specific Core IR operation.
+
+The type checker, IR implementation, and LLVM backend are split into modules
+by subject. Backend, scheduler, platform, and collector details remain private
+to their implementing crates.
+
+## Actor runtime
+
+Darwin arm64 uses green threads with a work-stealing scheduler. Socket,
+connection, and TLS waits park actors on a kqueue poller. Other blocking native
+calls run on a worker stack; the scheduler can transfer work to a spare thread.
+Other targets and sanitizer builds use one OS thread per actor.
+
+Actor-owned resources enforce runtime ownership. Failure and kill paths close
+owned resources and notify monitors without unwinding skipped EL frames.
+Standard-stream operations use critical sections to defer kills while shared
+state changes. Isolated foreign libraries run in a companion helper process,
+so their crashes can become actor exit reasons. See [Actor](/std/actor),
+[Native FFI](/std/ffi), and [runtime validation](/contributing/building#actor-runtime-validation).

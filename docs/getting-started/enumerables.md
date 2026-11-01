@@ -33,3 +33,39 @@ order. `map`, `filter`, and `to_list` return lists.
 See the [Enum reference](/std/enum) for signatures and the
 [Set](/std/set), [Queue](/std/queue), and [Heap](/std/heap) references for
 additional persistent collections.
+
+## Custom iteration
+
+`for` and the traversal functions select the source's `Iterable`
+implementation. `iter` creates a cursor once; `next` returns an item and the
+next cursor, or `:done`. The compiler uses the same calls for custom sources:
+
+```el
+struct Countdown do
+	from: i64
+end
+
+impl Iterable for Countdown do
+	type Item = i64
+	type Cursor = i64
+
+	# Returns the initial cursor from value.from. Nonpositive values are empty.
+	fn iter(value: Countdown) -> i64 do
+		value.from
+	end
+
+	# Returns cursor and its successor, or :done when cursor is nonpositive.
+	fn next(cursor: i64) -> {:item, i64, i64} | :done do
+		if cursor > 0 do {:item, cursor, cursor - 1} else :done end
+	end
+end
+
+for value in %Countdown{from: 3} do
+	IO.println(value)
+end
+# Prints 3, 2, and 1 on separate lines.
+```
+
+Lists advance by their remaining tail, so a complete list traversal is linear.
+String-view cursors advance by byte offset. Arrays use slice views for
+iteration. The source expression is evaluated exactly once.

@@ -82,19 +82,17 @@ data = Buffer.to_bytes(buffer)
 
 ```el
 Buffer.to_string(buffer: Buffer) ->
-  {:ok, string} | {:error, String.Utf8Error}
+	{:ok, string} | {:error, :invalid_utf8, string}
 ```
 
 Returns the current contents as a UTF-8 `string`. It validates the complete
-byte sequence; `String.Utf8Error` identifies the zero-based byte offset of the
+byte sequence. A failure message includes the zero-based byte offset of the
 first invalid sequence:
 
 ```el
 match Buffer.to_string(buffer) do
-  {:ok, text} -> IO.println(text)
-  {:error, reason} ->
-    offset = String.utf8_error_offset(reason)
-    IO.report("invalid UTF-8 at byte " ++ Show.show(offset))
+	{:ok, text} -> IO.println(text)
+	{:error, :invalid_utf8, message} -> IO.report(message)
 end
 ```
 
@@ -102,6 +100,7 @@ end
 
 There is no overloaded `append`; distinct `append_byte`, `append_bytes`, and
 `append_string` functions keep the argument types explicit. Values returned by
-either conversion never change after later buffer operations. The runtime may
-reuse uniquely held storage or use copy-on-write, but observable semantics
-remain local rebinding and immutable snapshots.
+either conversion never change after later buffer operations. Appending to the
+latest buffer value reuses spare capacity with amortized O(1) cost per byte.
+Appending to an older value copies its existing bytes first. Snapshot contents
+remain immutable, including when actors append to the same buffer value.

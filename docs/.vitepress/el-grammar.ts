@@ -17,6 +17,10 @@ export const elLanguage = {
   displayName: 'EL',
   aliases: ['ell'],
   patterns: [
+    {
+      match: String.raw`\?(?:\\(?:u\{[0-9a-fA-F]+\}|x[0-9a-fA-F]{2}|[\\"'nrt0s])|[^\s\\])`,
+      name: 'constant.numeric.el',
+    },
     { include: '#block-comment' },
     {
       match: '(#(?![\\[|]).*)',

@@ -87,3 +87,32 @@ both members equal. Recursive aliases are also rejected:
 ```
 
 Express managed recursion through a nominal struct field instead.
+
+## Reason atoms in tuple slots
+
+A tuple slot can contain a closed union of atoms. Construction and patterns
+can name one atom from that union:
+
+```el
+@type LoadResult = {:ok, string} | {:error, :not_found | :invalid_utf8 | :other, string}
+
+# Returns text from path, or the read failure and a message.
+fn load(path: string) -> LoadResult do
+	with {:ok, text} <- File.read_text(path) do
+		{:ok, text}
+	else
+		{:error, :not_found, message} -> {:error, :not_found, message}
+		{:error, :invalid_utf8, message} -> {:error, :invalid_utf8, message}
+		{:error, _, message} -> {:error, :other, message}
+	end
+end
+```
+
+The checker counts the atoms covered by each pattern. Missing reasons receive
+`E2126`; an arm already covered by an earlier arm receives `E2125`. A catch-all
+reason binding keeps the slot's declared union type.
+
+A narrower structural union widens into an expected union containing all its
+members. Tuples widen element by element, including their reason slots. This
+allows a helper to propagate an error into a larger reason set through a
+return, argument, or `with`. Every source member must have exactly one target.

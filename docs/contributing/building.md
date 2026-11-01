@@ -95,8 +95,37 @@ LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm \
   cargo test -p el-driver --features allocation-failure-test --test native
 ```
 
-`gc-stress-test` and `allocation-failure-test` are conformance build modes, not
-EL source options, and must not be combined.
+`gc-stress-test`, `allocation-failure-test`, and `kill-stress-test` are separate
+conformance build modes, not EL source options. Do not combine them.
+
+## Actor runtime validation
+
+Darwin arm64 uses green actors by default. Set `EL_WORKERS=<n>` to change the
+worker count, or `EL_SCHEDULER=threads` to select one OS thread per actor.
+Sanitizer builds always use OS threads.
+
+Kill stress ends every actor except `main` at pseudo-random safepoints. Run only
+the dedicated test, because other native tests expect their actors to finish:
+
+```sh
+LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm \
+  EL_KILL_STRESS_SEED=7 \
+  cargo test -p el-driver --features kill-stress-test --test native -- kill_stress
+```
+
+`EL_KILL_STRESS_MEAN` sets the mean distance between kills, default 400
+safepoints. Stress builds reduce scheduler fixture sizes because each managed
+allocation collects.
+
+An isolated-library manifest requires a host C compiler for the companion
+helper. `CC` selects that compiler. Validate the linking and helper path with:
+
+```sh
+LLVM_SYS_221_PREFIX=/opt/homebrew/opt/llvm \
+  cargo test -p el-cli --features managed-runtime --test isolated_ffi
+```
+
+Keep `<program>-ffi-helper` beside the program when deploying an isolated build.
 
 ## V1 release gate
 
@@ -111,8 +140,11 @@ cargo test --release --workspace
 cargo test -p el-codegen --features llvm,managed-runtime
 cargo test -p el-runtime --features gc-stress-test
 cargo test --release -p el-runtime --features gc-stress-test
+cargo test -p el-driver --features managed-runtime --test native
+cargo test --release -p el-driver --features managed-runtime --test native
 cargo test -p el-driver --features gc-stress-test --test native
 cargo test --release -p el-driver --features gc-stress-test --test native
+cargo test -p el-cli --features managed-runtime --test isolated_ffi
 cargo build --workspace --locked --offline
 ```
 
@@ -162,6 +194,17 @@ Default validation uses local peers and reserved `.invalid` names.
 Boehm GC remains uninstrumented. Set `ASAN_OPTIONS=detect_leaks=0` because the
 collector's allocations are not tracked. Use the same sanitizer setting for
 all code linking that runtime. Unset the setting to return to a normal build.
+
+Actor runtime tests also run under ThreadSanitizer:
+
+```sh
+EL_RUNTIME_SANITIZE=thread cargo test -p el-runtime --features boehm
+```
+
+Repeat the timing-dependent suite before trusting one passing run.
+ThreadSanitizer's shadow stack is limited to 65,536 entries. Deep recursion can
+exceed that limit before an OS-thread actor reaches its runtime stack limit.
+Keep recursive sanitizer fixtures below that depth.
 
 Workspace tests include seeded parser and formatter mutations. Coverage-guided
 `cargo-fuzz` targets under `fuzz/` need nightly Rust. See the authoritative

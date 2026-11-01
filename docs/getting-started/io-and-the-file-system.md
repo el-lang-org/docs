@@ -14,14 +14,14 @@ match File.open_read(path) do
 		defer do
 			match File.close(file) do
 				{:ok, _} -> unit
-				{:error, reason} -> IO.report(reason)
+				{:error, _, message} -> IO.report(message)
 			end
 		end
 
 		process(file)
 
-	{:error, reason} ->
-		IO.report(reason)
+	{:error, _, message} ->
+		IO.report(message)
 end
 ```
 
@@ -39,14 +39,14 @@ must both implement `Show`, and map entries retain insertion order:
 ```el
 counts: Map[string, usize] = %{"first" => 1, "second" => 2}
 IO.println(counts)
-IO.println(["nested", Show.show(#[3, 4])])
+IO.println(["nested", "ready"])
 ```
 
 This prints:
 
 ```text
-%{first => 1, second => 2}
-[nested, #[3, 4]]
+%{"first" => 1, "second" => 2}
+["nested", "ready"]
 ```
 
 These forms are intended for human-readable diagnostics, not parsing or stable
@@ -59,23 +59,27 @@ repeated close return tagged errors.
 
 ## Portable error recovery
 
-Inspect a stable kind instead of parsing `Show` output or a host error code:
+Match the reason atom directly and report the message:
 
 ```el
-match File.open_read(path) do
-	{:ok, file} -> process(file)
-	{:error, reason} ->
-		match File.error_kind(reason) do
-			:not_found -> IO.report("file not found")
-			_ -> IO.report(reason)
-		end
+match File.read_text("input.txt") do
+	{:ok, text} -> IO.println(text)
+	{:error, :not_found, _} -> IO.report("file not found")
+	{:error, :invalid_utf8, message} -> IO.report(message)
+	{:error, _, message} -> IO.report(message)
 end
 ```
 
-`File.error_operation` identifies the failed operation, while
-`File.error_code` returns an optional target-dependent `i64`. `IO.Error` exposes
-the equivalent accessors through `IO`. Standard I/O, file, and UTF-8 errors are
-immutable values implementing `Eq`, `Hash`, and `Show`, but not `Ord`.
+File, IO, network, HTTP, XML, and UTF-8 conversion failures use
+`{:error, reason, message}`. Each function declares one closed reason union.
+The message contains details for a person, such as an operation, path, OS
+description, or UTF-8 byte offset. Branch on the reason, because message wording
+can change. `:eof` and `:timeout` keep their own result cases.
+
+Actor and Task failures keep `{:error, Actor.Exit}`. `Ffi.cstring` and
+`JSON.decode` also retain their documented two-element errors. See [Unions and
+type aliases](/getting-started/unions#reason-atoms-in-tuple-slots) for reason
+patterns and widening.
 
 ## Semantics
 
@@ -99,7 +103,7 @@ immutable values implementing `Eq`, `Hash`, and `Show`, but not `Ord`.
 	```
 
 - Actions run once, in **last-in-first-out** order, on every normal exit from the
-  innermost enclosing lexical block — including an early `return`. Loop-body
+  innermost enclosing lexical block, including an early `return`. Loop-body
   actions run at the end of each reached iteration.
 - On fallthrough, the block result is evaluated and saved before cleanup, then
   yielded afterward.
@@ -107,7 +111,9 @@ immutable values implementing `Eq`, `Hash`, and `Show`, but not `Ord`.
   another `defer`, or update a captured outer binding, though it may use local
   mutable bindings declared inside the deferred block.
 - Deferred actions do **not** run after an unrecoverable runtime failure, an
-  implementation abort, or external termination.
+  implementation abort, or external termination. When an actor ends, the
+  runtime closes its owned resources without executing the skipped frames'
+  deferred code. When `main` returns, other actors end without cleanup.
 
 ## Whole-file text processing
 
@@ -118,15 +124,17 @@ match File.read_text("input.txt") do
 	{:ok, text} ->
 		match File.write_text("output.txt", String.downcase(text)) do
 			{:ok, _} -> IO.println("written")
-			{:error, reason} -> IO.report(reason)
+			{:error, _, message} -> IO.report(message)
 		end
 	_ -> IO.report("cannot read UTF-8 input")
 end
 ```
 
-`File.read_bytes` and `File.write_bytes` work with raw bytes. Generic
-`IO.read_all` and `IO.write_string` accept any `Reader` or `Writer`, including
-application-defined implementations.
+`File.read` and `File.write` work with raw bytes. Generic
+`IO.read_all` and `IO.write` accept any `Reader` or `Writer`, including
+application-defined implementations. `IO.binread(device, max_bytes)`,
+`IO.binwrite(device, data)`, and `IO.flush(device)` each perform one protocol
+operation on an open device.
 
 ## Console input and inspection
 

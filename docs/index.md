@@ -16,7 +16,7 @@ features:
   - title: Immutable by default
     details: Value bindings are immutable by default; mutation is explicit with `mut` and `:=`.
   - title: Recoverable errors as values
-    details: No exceptions in v1. Tagged tuples like `{:ok, value} | {:error, reason}` are matched exhaustively.
+    details: No exceptions in v1. Operation results like `{:ok, value} | {:error, reason, message}` are matched exhaustively.
   - title: Native, AOT, GC-managed
     details: Compiles to a standalone native executable via LLVM, with Boehm GC managing ordinary heap values.
   - title: Deterministic resources

@@ -96,15 +96,14 @@ buffer := Buffer.append_string(buffer, "world")
 
 match Buffer.to_string(buffer) do
 	{:ok, text} -> IO.println(text)
-	{:error, reason} ->
-		offset = String.utf8_error_offset(reason)
-		IO.report("invalid UTF-8 at byte " ++ Show.show(offset))
+	{:error, :invalid_utf8, message} -> IO.report(message)
 end
 ```
 
 - `Buffer.to_bytes` always succeeds.
-- `Buffer.to_string` validates UTF-8 and returns a tagged result; `String.Utf8Error`
-  identifies the zero-based offset of the first invalid sequence.
+- `Buffer.to_string` validates UTF-8 and returns `{:error, :invalid_utf8, message}`
+  on failure. The message includes the zero-based byte offset of the first
+  invalid sequence.
 - Distinct `append_byte`, `append_bytes`, and `append_string` functions avoid
   overloading, and previously returned values remain unchanged.
 
@@ -183,5 +182,5 @@ IO.println("pi = #{Format.float(Math.pi(), 2)}")
 IO.println(Format.pad_left("42", 5, "0"))
 ```
 
-See [Format](/std/format) for padding and precision and [Json](/std/json) for
+See [Format](/std/format) for padding and precision and [JSON](/std/json) for
 JSON decoding, pretty printing, and compact encoding.

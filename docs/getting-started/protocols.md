@@ -85,7 +85,7 @@ end
 
 `Source.Item[S]` names the type selected by the implementation for `S`.
 `Iterable` similarly declares `Item` and `Cursor`; `Reader` and `Writer` select
-an associated `Error` type.
+an associated `ErrorReason` type.
 
 ## Derive implementations
 
@@ -111,6 +111,7 @@ conflicts with an explicit one are compile-time errors. Floats have no `Eq`,
 | `Show`, `Hash` | Diagnostic text and hashing |
 | `Iterable` | Iteration through `for` and `Enum` |
 | `Reader`, `Writer` | Recoverable byte I/O |
+| `Send` | Compiler-derived permission to send values between actors |
 | `Concat` | `++` |
 | `Add`, `Sub`, `Mul`, `Div`, `Rem`, `Neg`, `Pow` | Arithmetic operators |
 | `Number`, `Integer`, `Float` | [Math functions](/std/math) |
@@ -118,3 +119,37 @@ conflicts with an explicit one are compile-time errors. Floats have no `Eq`,
 Each arithmetic operator needs its own bound, such as `T: Add + Mul`.
 `Number` does not imply `Add`. The fixed Unicode infix protocols also require
 separate implementations or bounds. See [Operators](/getting-started/operators).
+
+## Reader and Writer failure reasons
+
+```el
+protocol Reader do
+	type ErrorReason
+	fn read(reader: Self, max_bytes: usize) ->
+		{:ok, bytes} | :eof | {:error, ErrorReason, string}
+end
+
+protocol Writer do
+	type ErrorReason
+	fn write(writer: Self, data: bytes) -> {:ok, unit} | {:error, ErrorReason, string}
+	fn flush(writer: Self) -> {:ok, unit} | {:error, ErrorReason, string}
+end
+```
+
+These are core declarations shown for reference. A user implementation sets
+`type ErrorReason` to its own closed union of reason atoms. Generic [IO
+functions](/std/io#generic-readers-and-writers) preserve that reason and its
+message through `Reader.ErrorReason[R]` or `Writer.ErrorReason[W]`.
+
+## Send and actor ownership
+
+The compiler derives the methodless `Send` protocol for values that can cross
+an actor boundary. An aggregate is sendable when its components are sendable.
+Actor-owned resources, mailboxes, and task handles are not sendable. An explicit
+`impl Send` is rejected with `E2182`.
+
+Function types satisfy `Send`, but a closure literal passed directly to
+`Actor.spawn`, `Actor.start`, or `Task.async` may capture only sendable values.
+An owned capture receives `E2183`. A stored closure still has runtime ownership
+checks if it accesses another actor's resource. See [Actors and
+tasks](/getting-started/concurrency).

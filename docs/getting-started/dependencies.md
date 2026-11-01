@@ -65,4 +65,6 @@ allow = ["native_helper"]
 The package itself needs `[native]` to declare `@extern` or directly use public
 `Ffi` operations. Root consent also covers transitive dependencies; a
 dependency-local allowlist cannot grant it. Missing lists are empty.
-See [Native FFI](/std/ffi) for boundary types, memory ownership, and restrictions.
+`isolated = ["z"]` additionally runs that library in a helper process. Every
+isolated name must also appear in `libraries`. See [Native FFI](/std/ffi) for
+boundary types, actor ownership, helper deployment, and restrictions.

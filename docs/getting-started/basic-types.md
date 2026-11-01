@@ -171,6 +171,21 @@ A `rune` is a single Unicode scalar value, written with single quotes:
 letter = 'λ'
 ```
 
+A character-code literal is an integer containing a Unicode code point:
+
+```el
+delimiter: u8 = ?< # 60
+code: i64 = ?é     # 233
+space = ?\s       # 32
+newline = ?\n     # 10
+```
+
+Without an expected integer type, it defaults to `i64`. It also works in integer
+patterns. Rune escapes work after `?`, with `\s` for a space. Raw whitespace
+and backslash require escapes. `?é` as `u8` or `i8` is rejected with `E2181`,
+because a non-ASCII code point is not one UTF-8 byte. Use an ordinary numeric
+literal for a specific raw byte. A rune such as `'é'` remains a distinct type.
+
 ::: tip String literals and interpolation
 Raw and multiline string literals and integer indexing are unsupported.
 String interpolation uses `#{expression}` and formats through `Show`:

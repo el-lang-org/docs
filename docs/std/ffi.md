@@ -15,8 +15,8 @@ frameworks = []
 allow = []
 ```
 
-Only `libraries`, `frameworks`, and `allow` are accepted. Each is a same-line
-array of quoted strings. Missing arrays are empty, and duplicates have no effect.
+`libraries`, `frameworks`, `allow`, and `isolated` are the accepted keys.
+Each is a same-line array of quoted strings. Missing arrays are empty, and duplicates have no effect.
 Linker names cannot contain whitespace, control characters, or path separators,
 or start with `-` or `@`.
 
@@ -36,6 +36,7 @@ module Main
 @extern["strlen"]
 private fn strlen(text: Ffi.Memory) -> usize
 
+# Prints the byte length of a NUL-terminated copy of "EL", then frees it.
 fn main() do
 	match Ffi.cstring("EL") do
 		{:ok, text} ->
@@ -93,4 +94,49 @@ For each of `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, and `f64`,
 `Ffi.write_T(memory, offset, value)` writes it. Offsets are `usize`; operations
 use native byte order and allow unaligned access. Bounds violations, use after
 free, and double free fail with `foreign_memory` at the call's source span.
-Memory and Pointer implement no standard protocols.
+`Ffi.Memory` and `Ffi.Pointer` are actor-owned and do not implement `Send`.
+Access from another actor fails with `not_owner`. Allocate and free Memory in
+its owning actor, and use Pointer in the actor that obtained it. Neither type
+implements other standard protocols.
+
+## Isolate a native library
+
+Add a library to both `libraries` and `isolated` to run its user-declared
+foreign calls in a helper process:
+
+```toml
+[native]
+libraries = ["z"]
+isolated = ["z"]
+```
+
+Every isolated entry must also appear in the same table's `libraries`.
+Frameworks cannot be isolated. If any package isolates a library, that choice
+applies to the whole dependency graph. Prelude and libc calls stay in process.
+
+`el build` and `el test` also produce `<program>-ffi-helper` beside the program.
+The host C compiler builds it, honoring `CC`. Copy the program and helper
+together. The runtime starts the helper on the first isolated call and reuses
+it. Calls park their actor while they wait. The helper executes one call at a
+time, with up to eight calls in flight; other callers wait for a slot.
+
+Isolated calls use the same declarations and boundary types, with these limits:
+
+- Borrowed `string` and `bytes` are copied. A native write to those copies
+  does not change EL values.
+- An entire `Ffi.Memory` block is copied in and back out after a successful
+  call. The callee cannot retain its pointer.
+- A call carries at most 16 MiB of borrowed content, eight integer-class
+  register arguments, and eight floating-point register arguments. A string
+  or byte argument uses two integer-class registers.
+- `Ffi.Pointer` results refer to helper memory. `Ffi.read_cstring` reads that
+  memory through the helper. A pointer from an earlier helper generation, or
+  one passed between isolated and in-process calls, fails with `foreign_memory`.
+- `:errno` declarations capture errno inside the helper.
+
+A helper crash ends each actor waiting on it with `{:foreign_crash, signal}`.
+A crash while `main` waits ends the program. Monitor
+[Actor.foreign_helper](/std/actor#isolated-foreign-helper) to observe the crash.
+The next call starts a fresh helper, which loses the crashed library's state.
+Isolation adds process communication and copies, so reserve it for libraries
+whose crashes need containment.

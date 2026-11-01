@@ -5,8 +5,8 @@ language. It uses Elixir-inspired syntax and compiles ahead of time to native
 executables through LLVM. The bootstrap compiler is written in Rust.
 
 The v1 implementation and conformance milestones are complete. The current
-compiler also supports closures, collection libraries, networking, and package
-FFI. The supported native target is Darwin arm64 (`aarch64-apple-darwin`).
+compiler also supports closures, collection libraries, networking, actors,
+tasks, supervision, XML, and package FFI with optional process isolation. The supported native target is Darwin arm64 (`aarch64-apple-darwin`).
 The [language specifications](https://github.com/el-lang-org/el/tree/main/docs)
 define the behavior described on this site.
 
@@ -41,6 +41,7 @@ Save this as `hello.ell`:
 ```el
 module Main
 
+# Prints a greeting and returns normally with exit status 0.
 fn main() do
 	IO.println("Hello, world!")
 end
@@ -128,3 +129,8 @@ Runnable projects in the compiler repository include
 [math and custom operators](https://github.com/el-lang-org/el/tree/main/examples/math_operators),
 [local TCP and HTTP clients and servers](https://github.com/el-lang-org/el/tree/main/examples/net_http),
 and [native FFI](https://github.com/el-lang-org/el/tree/main/examples/native_ffi).
+
+
+The [actors and tasks guide](/getting-started/concurrency) shows typed messages,
+request replies, and task results. The [Xml reference](/std/xml) describes XML
+parsing and formatting.
