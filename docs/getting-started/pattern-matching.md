@@ -43,10 +43,11 @@ EL v1 has no exceptions. Recoverable errors are ordinary tagged values that you
 match exhaustively:
 
 ```el
+# Prints input as a decimal i64, or reports its conversion error to stderr.
 fn print_number(input: string) do
-	match Parser.parse_int(input) do
+	match String.to_integer(input) do
 		{:ok, value} -> IO.println(value)
-		{:error, reason} -> IO.report(reason)
+		{:error, _, message} -> IO.report(message)
 	end
 end
 ```
@@ -82,6 +83,7 @@ V1 patterns include:
 - wildcards: `_`
 - new immutable bindings: `value`
 - literals: `200`, `:ready`, `"text"`
+- literal string prefixes: `"prefix" ++ rest` or `"prefix" ++ _`
 - tuples and tagged tuples: `{:ok, value}`
 - empty and head/tail list patterns: `[]`, `[value | rest]`
 - partial struct patterns
@@ -90,6 +92,40 @@ V1 patterns include:
 
 Pattern bindings are local to their arm, and one pattern cannot bind the same
 name twice.
+
+## String-prefix patterns
+
+A literal prefix can match a string and bind its entire remainder, including
+an empty remainder:
+
+```el
+# Returns the text after "say ", "stopping" for "quit", or "unknown command".
+fn command_body(input: string) -> string do
+	match input do
+		"say " ++ text -> text
+		"quit" -> "stopping"
+		_ -> "unknown command"
+	end
+end
+
+command_body("say hello") # "hello"
+command_body("say ")      # ""
+```
+
+Matching compares exact UTF-8 bytes, case-sensitively and without Unicode
+normalization. The captured remainder is a valid `string`.
+Use `"prefix" ++ _` when you only need to test a prefix. A successful wildcard
+match skips remainder validation, allocation, and copying.
+
+Prefix patterns work inside tuples and structs, `with` clauses, and
+multi-clause anonymous functions. The left side must be a string literal
+without interpolation; the right side must be a new binding or `_`.
+Dynamic prefixes, suffix captures, and chained concatenation patterns are invalid.
+
+Arms still match from top to bottom. A prefix covers every later literal or
+prefix that starts with it. For example, an arm for `"a" ++ _` makes a later
+`"ab"` arm unreachable. An empty prefix matches every string. Nonempty prefixes
+need a catch-all for exhaustiveness.
 
 ## Exhaustiveness
 

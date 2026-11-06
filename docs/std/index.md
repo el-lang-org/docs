@@ -38,6 +38,7 @@ Reference signatures display type parameters and bounds, such as
 
 ## Numbers and system services
 
+- [Integer](/std/integer) and [Float](/std/float) for prefix parsing
 - [Math](/std/math) and [numeric conversions](/std/numeric)
 - [Time](/std/time) and [Random](/std/random)
 - [Process](/std/process), [OS](/std/os), and [Path](/std/path)

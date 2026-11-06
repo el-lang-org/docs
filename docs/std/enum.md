@@ -107,18 +107,53 @@ positive: [i64] = Enum.filter([-2, 0, 3], is_positive)   # [3]
 
 ```el
 Enum.reduce[I: Iterable, A](values: I, initial: A,
-	reducer: (A, Iterable.Item[I]) -> A) -> A
+	reducer: (Iterable.Item[I], A) -> A) -> A
 ```
 
-Threads `reducer` strictly left-to-right over the items, starting from `initial`.
+Calls `reducer(item, accumulator)` once per item in iterable order, starting
+from `initial`. Returns the final accumulator, or `initial` for an empty input.
+The accumulator and result have the same type `A`.
 
 ```el
-fn add(total: i64, value: i64) -> i64 do
-	total + value
+# Returns accumulator * 10 + digit for a decimal digit from 0 through 9.
+# Fails on i64 overflow.
+fn append_digit(digit: i64, accumulator: i64) -> i64 do
+	accumulator * 10 + digit
 end
 
-total = Enum.reduce([1, 2, 3], 0, add)   # 6
+number = Enum.reduce([1, 2, 3], 0, append_digit) # 123
 ```
+
+The callback now receives the item first. Update older accumulator-first
+callbacks to `fn item, accumulator -> ... end`. The call's argument order
+remains `Enum.reduce(values, initial, reducer)`.
+
+### Enum.reduce_while
+
+```el
+Enum.reduce_while[I: Iterable, A](values: I, initial: A,
+	reducer: (Iterable.Item[I], A) -> {:cont, A} | {:halt, A}) -> A
+```
+
+Calls `reducer(item, accumulator)` in iterable order. `{:cont, next_state}`
+continues with that state. `{:halt, final_state}` returns its payload
+immediately, without another callback or cursor advance. Exhaustion returns
+the last continued state. Empty input returns `initial` without a callback.
+
+```el
+total = Enum.reduce_while([1, 2, 3, 4], 0, fn item, sum ->
+	if item == 3 do {:halt, sum} else {:cont, sum + item} end
+end) # 3
+```
+
+The initial state, both control payloads, and result have one fixed type `A`.
+For a state that can hold success or failure, annotate `initial` with the full
+union type. A named callback must declare the exact result type
+`{:cont, A} | {:halt, A}`, even when it always continues. Invalid control tags,
+bare state results, and incompatible payloads fail type checking.
+
+A `return` inside the callback exits only that callback. Stopping the reduction
+requires `:halt`.
 
 ### Enum.each
 

@@ -76,6 +76,38 @@ String.replace("a,b,c", ",", "-")   # "a-b-c"
 Use `String.graphemes` when the desired unit is a Unicode extended grapheme
 cluster rather than a literal separator match.
 
+## Parse numbers from text
+
+Use `String.to_integer` or `String.to_float` when the entire string must be a
+number. Invalid text returns `{:error, reason, message}`:
+
+```el
+String.to_integer("42")      # {:ok, 42}
+String.to_integer("FF", 16)  # {:ok, 255}
+String.to_float("1.25e2")    # {:ok, 125.0}
+
+match String.to_integer("42kg") do
+	{:ok, value} -> IO.println(value)
+	{:error, _, message} -> IO.report(message)
+end
+```
+
+Use `Integer.parse` or `Float.parse` when you need the unconsumed suffix:
+
+```el
+Integer.parse("-2Akg", 16) # {-42, "kg"}
+Float.parse("12.5ms")     # {12.5, "ms"}
+Float.parse("12")         # {12.0, ""}
+```
+
+Integer calls default to base 10. An explicit base ranges from 2 through 36.
+Neither parser skips whitespace or recognizes radix prefixes or underscores.
+`String.to_float` requires digits on both sides of a decimal point, so `"12"`
+and `"1e3"` are invalid there. `Float.parse` accepts both as prefixes.
+
+See [Integer](/std/integer), [Float](/std/float), and
+[String](/std/string#string-to-integer) for syntax, range limits, and error reasons.
+
 ## Unicode
 
 All grapheme APIs use EL v1's bundled Unicode 17.0.0 data and the untailored

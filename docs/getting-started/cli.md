@@ -22,8 +22,9 @@ elc [--release] [-o executable] source.ell
 ## Project discovery
 
 Project commands use the nearest `el.toml` in the current directory or an
-ancestor. A missing manifest is an error. Help, version, and `elc` need no
-project. `el fmt file.ell` and `el fmt -` also work without a manifest.
+ancestor. A missing manifest is an error for package checks and builds.
+Help, version, and `elc` need no project. `el fmt file.ell`, `el fmt -`, and
+standalone-file diagnostics through `el lsp` also work without a manifest.
 
 ## el check
 
@@ -102,8 +103,20 @@ include source diagnostics, name completion, document formatting, and declared
 function-signature hover, including unsaved buffers. Go-to-definition, rename,
 and inferred-expression hover are not implemented.
 
-The [Neovim plugin](https://github.com/el-lang-org/el/tree/main/editors/nvim)
-supports Neovim 0.11+ and starts one server per manifest project.
+Files in a loadable project receive project diagnostics. A loose `.ell` file,
+or a file whose project fails to load, receives standalone parser, resolver,
+and type diagnostics for its own buffer. Project-loading errors also appear in
+the client's LSP log. Completion and hover require a loadable project.
+Formatting works without one. Closing a document clears its diagnostics.
+
+Diagnostics retain notes and help. Clients that support related locations can
+show secondary labels in project and dependency files. Other labels appear as
+text with a path, line, and column. Embedded standard-library labels always use
+text locations such as `stdlib/string.ell:line:column`.
+
+The [Neovim setup guide](/getting-started/neovim) covers installation,
+indentation, highlighting, and diagnostics. The bundled plugin supports Neovim
+0.11+, with one server per manifest project and directory roots for loose files.
 
 ## el emit llvm-ir
 

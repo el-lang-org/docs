@@ -18,6 +18,37 @@ all_positive = Enum.all([1, 2, 3], &(&1 > 0))   # true
 Closures capture immutable snapshots of referenced outer values. Parameters
 infer their types from the expected callback type or body constraints.
 
+## Reduce in order
+
+`Enum.reduce` passes each item before the accumulator. This order matters when
+the operation is not commutative:
+
+```el
+number = Enum.reduce([1, 2, 3], 0, fn digit, total -> total * 10 + digit end)
+# 123
+```
+
+Older callbacks used `fn accumulator, item -> ... end`. Swap those parameters
+when you update existing code.
+
+Use `Enum.reduce_while` to stop before the end of the input:
+
+```el
+total = Enum.reduce_while([1, 2, 3, 4], 0, fn item, sum ->
+	if item == 3 do {:halt, sum} else {:cont, sum + item} end
+end) # 3
+```
+
+`{:cont, state}` continues. `{:halt, state}` returns immediately. Empty input
+returns the initial value without a callback. A halt prevents the next cursor
+advance too. A `return` inside the callback only exits the callback.
+
+All states have the same type. For success and error alternatives, annotate the
+initial value with the full union. See [Enum.reduce_while](/std/enum#enum-reduce-while)
+for callback type requirements.
+
+## Count distinct items
+
 `Enum.frequencies` counts each distinct item into a `Map[Item, usize]`.
 Items need `Eq` and `Hash`; map entries follow the order of first appearance:
 
@@ -25,6 +56,8 @@ Items need `Eq` and `Hash`; map entries follow the order of first appearance:
 counts: Map[string, usize] = Enum.frequencies(["a", "b", "a"])
 # %{"a" => 2, "b" => 1}
 ```
+
+## Iteration order
 
 Maps yield `{key, value}` pairs in insertion order. Lists traverse head to tail,
 arrays and slices by index, bytes by byte offset, and string views in source

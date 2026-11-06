@@ -110,6 +110,78 @@ String.replace("abc", "", "-")      # "abc"
 Use `String.graphemes` when the desired unit is a Unicode extended grapheme
 cluster rather than a literal separator match.
 
+### String.to_integer
+
+```el
+String.to_integer(text: string, base: i64) ->
+	{:ok, i64} | {:error, String.ToIntegerErrorReason, string}
+```
+
+Converts all of `text` to an `i64`. `base` must be an `i64` between 2 and 36.
+A direct call may omit it to use base 10. The input remains unchanged.
+
+```el
+String.to_integer("42")      # {:ok, 42}
+String.to_integer("-2A", 16) # {:ok, -42}
+"101" |> String.to_integer(2) # {:ok, 5}
+```
+
+Uses the signed ASCII digit rules of [Integer.parse](/std/integer#integer-parse).
+Whitespace, underscores, and trailing text are invalid. Radix prefixes receive
+no special treatment.
+`String.ToIntegerErrorReason` is
+`:invalid_base | :invalid_integer | :out_of_range`.
+
+Checks the base first, then complete syntax, then range. Trailing text returns
+`:invalid_integer` even when the numeric prefix would overflow.
+A syntactically valid value outside `i64` returns `:out_of_range`.
+Messages describe failures without copying the input and are not a stable
+machine format. Invalid text returns an error value without terminating the actor.
+
+```el
+match String.to_integer("42kg") do
+	{:ok, value} -> IO.println(value)
+	{:error, :invalid_integer, _} -> IO.report("expected a whole integer")
+	{:error, _, message} -> IO.report(message)
+end
+```
+
+Function values keep the declared two-argument type. For a one-argument decimal
+callback, use `fn text: string -> String.to_integer(text) end`.
+
+### String.to_float
+
+```el
+String.to_float(text: string) ->
+	{:ok, f64} | {:error, String.ToFloatErrorReason, string}
+```
+
+Converts all of `text` to an `f64`. Requires ASCII digits on both sides of a
+decimal point, with an optional leading sign and optional complete exponent.
+The input remains unchanged. Unlike [Float.parse](/std/float#float-parse),
+integer-looking text and exponent-only forms such as `1e3` are invalid.
+
+```el
+String.to_float("1.25e2") # {:ok, 125.0}
+String.to_float("-0.5")   # {:ok, -0.5}
+
+match String.to_float("12") do
+	{:ok, value} -> IO.println(Format.float(value, 1))
+	{:error, :invalid_float, _} -> IO.report("expected a decimal point")
+	{:error, :out_of_range, message} -> IO.report(message)
+end
+```
+
+`String.ToFloatErrorReason` is `:invalid_float | :out_of_range`.
+Invalid syntax or trailing text returns `:invalid_float` before any range
+check. Whitespace, nonfinite spellings, `.5`, and `1.` are invalid.
+A complete value that rounds to infinity returns `:out_of_range`.
+
+Rounding follows [Float.parse](/std/float#float-parse), including finite
+subnormals and underflow to signed zero. Invalid text returns an error value
+without terminating the actor. Messages describe failures without copying the
+input and are not a stable machine format.
+
 ### String.bytes
 
 ```el

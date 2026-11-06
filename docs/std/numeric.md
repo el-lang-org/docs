@@ -18,6 +18,11 @@ U8 U16 U32 U64 Usize
 
 `f32`, `f64`, and `rune` are conversion forms without wrapping-operation modules.
 
+Text parsing uses [Integer.parse](/std/integer), [Float.parse](/std/float),
+[String.to_integer](/std/string#string-to-integer), or
+[String.to_float](/std/string#string-to-float). These functions return recoverable
+errors for malformed text. Numeric conversion forms do not parse strings.
+
 ## Semantics
 
 - Integer-to-integer conversion checks the destination range.

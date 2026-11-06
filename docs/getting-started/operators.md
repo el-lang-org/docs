@@ -4,6 +4,21 @@ EL evaluates operands exactly once, left to right. Numeric operands have the
 same type, with no implicit conversions. Integers use checked arithmetic in
 development and optimized builds.
 
+## Boolean operators
+
+`and` and `or` short-circuit and require boolean operands. Unary `!` evaluates
+one boolean operand once and returns its opposite:
+
+```el
+!true             # false
+!false            # true
+!(true and false) # true
+```
+
+Negation binds more tightly than comparisons. Parenthesize a comparison to
+negate its result, as in `!(count == 0)`. Other operand types receive `E2113`.
+For example, `!1` reports ``expected `bool`, found `i64` `` on `1`.
+
 ## Arithmetic protocols
 
 | Operator | Protocol method |

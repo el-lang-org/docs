@@ -75,13 +75,13 @@ ready = true
 rejected = true == false
 ```
 
-Three boolean operators are available: `and`, `or`, and `not`. They are strict
-in the sense that every operand must have type `bool`:
+The boolean operators are `and`, `or`, and unary `!`. Every operand must have
+type `bool`:
 
 ```el
 both = true and false    # false
 either = false or true   # true
-opposite = not true      # false
+opposite = !true         # false
 ```
 
 There is no truthiness: integers, strings, lists, and other values cannot be
@@ -95,7 +95,9 @@ end
 ```
 
 `and` and `or` are short-circuit operators. They only evaluate the right side if
-the left side is not enough to determine the result.
+the left side is not enough to determine the result. Unary `!` evaluates its
+operand once and returns the opposite boolean. `!1` fails with
+``E2113: expected `bool`, found `i64` ``.
 
 EL has **no `nil`**, `null`, nullable references, or implicit zero values.
 Absence of a value is expressed with the reserved core prelude type
@@ -113,17 +115,16 @@ status = :not_found
 Atoms are equal if their names are equal:
 
 ```el
-same = :apple == :apple     # true
-different = :apple == :orange # false
+same = :apple == :apple # true
 ```
 
 Often they are used to express the state of an operation, by using values such
 as `:ok` and `:error`:
 
 ```el
-match Parser.parse_int(input) do
-	{:ok, value} -> value
-	{:error, reason} -> IO.report(reason)
+match String.to_integer("42") do
+	{:ok, value} -> IO.println(value)
+	{:error, _, message} -> IO.report(message)
 end
 ```
 

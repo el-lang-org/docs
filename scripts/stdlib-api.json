@@ -77,6 +77,7 @@
     "Enum.frequencies",
     "Enum.map",
     "Enum.reduce",
+    "Enum.reduce_while",
     "Enum.to_list"
   ],
   "ffi": [
@@ -116,6 +117,9 @@
     "File.write",
     "File.write_text"
   ],
+  "float": [
+    "Float.parse"
+  ],
   "format": [
     "Format.float",
     "Format.pad_left",
@@ -144,6 +148,9 @@
     "Http.response",
     "Http.serve",
     "Http.serve_one"
+  ],
+  "integer": [
+    "Integer.parse"
   ],
   "io": [
     "IO.binread",
@@ -403,7 +410,9 @@
     "String.graphemes",
     "String.length",
     "String.replace",
-    "String.split"
+    "String.split",
+    "String.to_float",
+    "String.to_integer"
   ],
   "supervisor": [
     "Supervisor.child",

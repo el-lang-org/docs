@@ -73,6 +73,11 @@ function captures. LLVM remains the backend, separate from semantic checking.
 ## Library operations and Core IR
 
 Library behavior stays in embedded EL source over small runtime interfaces.
+`Enum.reduce_while` implements early termination in EL. Integer and float text
+scanners also live in EL. Decimal-to-binary64 conversion uses a private runtime
+service for locale-independent rounding. These additions introduce no new Core
+IR operation.
+
 `for` lowers through `Iterable.iter` and `Iterable.next` cursors for standard
 and user-defined sources. List cursors advance by tail, and string-view cursors
 advance by byte offset. `Enum` traversal functions use those loops.
@@ -92,6 +97,23 @@ union operations, with no error-specific Core IR operation.
 The type checker, IR implementation, and LLVM backend are split into modules
 by subject. Backend, scheduler, platform, and collector details remain private
 to their implementing crates.
+
+## Diagnostics and editor recovery
+
+The parser collects independent syntax errors within and across source files
+before name resolution. Recovery nodes never enter resolution or later stages.
+A failed expression has no EL type. Checker recovery still visits independent
+siblings without inventing `unit` results or repeating errors for a failed binding.
+Invalid programs never reach lowering.
+
+The CLI and language server share source diagnostics, including `E2038` for a
+module header that disagrees with its source path. LSP diagnostics retain notes,
+help, and secondary locations from the same unsaved source map. Publication
+order is deterministic, and only identical diagnostics are deduplicated.
+
+When no loadable project contains a buffer, the language server checks the
+buffer as a standalone module. Project-only completion and hover remain empty.
+See [Neovim setup](/getting-started/neovim) for the editor behavior.
 
 ## Actor runtime
 
